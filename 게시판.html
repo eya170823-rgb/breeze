@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#ffffff" />
+  <title>게시판 · 브리즈부동산중개 BREEZE</title>
+  <meta name="description" content="브리즈부동산중개 BREEZE 공지사항·안내 게시판" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="board">
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <p class="ph-eyebrow">BOARD</p>
+        <h1>게시판</h1>
+        <p class="ph-sub">공지사항과 안내를 확인하세요. 제목을 누르면 자세한 내용이 보입니다.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="board-list" id="boardList">
+          <div class="skeleton-card sk-news"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="sample-data.js"></script>
+  <script src="sheets.js"></script>
+  <script src="layout.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
