@@ -167,25 +167,38 @@
   // 주소·지도 숨길 종류 / 권리금 숨길 종류
   const NO_ADDR_TYPES = ["상가", "상가건물", "토지", "공장 창고", "기타매물"];
   const NO_KEYMONEY_TYPES = ["상가", "상가건물"];
+  const NO_BIZNAME_TYPES = ["상가"]; // 상호(가게이름) 숨기고 업종(타입)으로 표시
   function stripKeyMoney(s) {
     return String(s || "").replace(/권리금?\s*[\d,]+\s*(억\s*)?(만\s*)?원?/g, "권리금 협의");
   }
+  const STATUS_WORDS = ["공실", "임대중", "계약완료", "거래완료"];
   function mapSheetRow(row, tabName) {
-    const deal = String(pick(row, ["구분"]) || "").trim();
-    if (/거래완료|계약완료|완료/.test(deal)) return null; // 완료 매물 제외
+    const dealRaw = String(pick(row, ["구분"]) || "").trim();
+    const statusCol = String(pick(row, ["상태"]) || "").trim();
+    // 상태: '상태' 열 우선, 없으면 '구분'에 상태값이 들어온 경우 사용
+    let status = statusCol, deal = dealRaw;
+    if (!status && STATUS_WORDS.some((w) => dealRaw.indexOf(w) > -1)) { status = dealRaw; deal = ""; }
+    if (!status) status = "공실";
+    if (/거래완료/.test(status) || /거래완료/.test(dealRaw)) return null; // 거래완료(소멸) → 제외
     const hideAddr = NO_ADDR_TYPES.includes(tabName);
-    const building = pick(row, ["건물명", "상호 건물명", "단지명", "상호"]);
+    const building = pick(row, ["아파트명", "건물명", "상호 건물명", "단지명", "상호"]);
     const dong = pick(row, ["읍면동"]);
     const sigungu = pick(row, ["시군구"]);
     const type2 = pick(row, ["타입"]);
     let desc = cleanDesc(pick(row, ["매물설명"]));
     if (NO_KEYMONEY_TYPES.includes(tabName)) desc = stripKeyMoney(desc);
-    const titleBase = building || (hideAddr ? tabName : dong || tabName);
+    const hideBiz = NO_BIZNAME_TYPES.includes(tabName);
+    let titleText;
+    if (hideBiz) titleText = pick(row, ["업종"]) || type2 || tabName; // 상가: 업종
+    else if (tabName === "아파트") titleText = [dong, building].filter(Boolean).join(" ") || tabName; // 아파트: 동 + 아파트명
+    else if (tabName === "원투룸") titleText = [dong, type2].filter(Boolean).join(" ") || tabName; // 원투룸: 동 + 타입
+    else titleText = (building || (hideAddr ? tabName : dong || tabName)) + (type2 ? " " + type2 : ""); // 그 외(오피스텔 등): 건물명 + 타입
     return {
       key: pick(row, ["key"]),
       type: tabName,
       deal: deal,
-      title: titleBase + (type2 ? " " + type2 : ""),
+      status: status,
+      title: titleText,
       price: feedPrice(deal, row),
       priceVal: feedPriceVal(deal, row),
       location: hideAddr ? "" : [sigungu, dong].filter(Boolean).join(" "),
@@ -208,7 +221,7 @@
           const rows = await fetchTab(tab);
           if (!rows) return [];
           return rows
-            .filter((r) => isPublishMark(pick(r, ["캘린더"])))
+            .filter((r) => /광고완료/.test(String(pick(r, ["등록자"]) || "")))
             .map((r) => mapSheetRow(r, tab))
             .filter(Boolean);
         } catch (e) {
@@ -243,8 +256,15 @@
   }
   async function fetchBlogPosts(rssUrl) {
     const api = "https://api.rss2json.com/v1/api.json?count=20&rss_url=" + encodeURIComponent(rssUrl);
-    const res = await fetch(api);
-    const data = await res.json();
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000); // 6초 안에 응답 없으면 포기 → 샘플로
+    let data;
+    try {
+      const res = await fetch(api, { signal: ctrl.signal });
+      data = await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
     if (!data || data.status !== "ok" || !data.items) return null;
     return data.items.map((it) => ({
       title: decodeEnt(it.title || ""),
@@ -261,16 +281,32 @@
     return (p.cats || []).some((c) => String(c).indexOf(cat) > -1) || String(p.category).indexOf(cat) > -1;
   }
 
+  function feedUrlFor(action) {
+    const u = CFG.feedUrl;
+    return u + (u.indexOf("?") > -1 ? "&" : "?") + "action=" + action;
+  }
+  // 앱스 스크립트 엔진은 CORS 허용(Access-Control-Allow-Origin:*)이라 fetch로 직접 호출
+  async function feedFetch(action) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(function () { ctrl.abort(); }, 20000); // 콜드스타트 대비 20초
+    try {
+      const res = await fetch(feedUrlFor(action), { signal: ctrl.signal });
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
   window.BreezeSheets = {
     async getListings() {
-      // 1순위: 앱스 스크립트 피드 (개인정보 안전 + 캘린더 공개표시 기준)
+      // 1순위: 앱스 스크립트 엔진 (개인정보 안전 + 광고완료 기준)
       if (CFG.feedUrl) {
         try {
-          const data = await jsonp(CFG.feedUrl);
+          const data = await feedFetch("listings");
           const list = (data && data.listings) || [];
           return list.length ? list : window.BREEZE_SAMPLE.listings;
         } catch (e) {
-          console.warn("매물 피드 로드 실패 → 샘플 사용", e);
+          console.warn("매물 엔진 로드 실패 → 샘플 사용", e);
           return window.BREEZE_SAMPLE.listings;
         }
       }
@@ -287,7 +323,15 @@
       return window.BREEZE_SAMPLE.listings;
     },
     async getNews() {
-      // 1순위: 블로그 '뉴스 카테고리' → 2순위: 시트 → 3순위: 샘플
+      // 0순위: 앱스 스크립트 엔진(블로그 서버사이드)
+      if (CFG.feedUrl) {
+        try {
+          const data = await feedFetch("news");
+          const list = (data && data.news) || [];
+          return list.length ? list : window.BREEZE_SAMPLE.news;
+        } catch (e) { return window.BREEZE_SAMPLE.news; }
+      }
+      // 1순위: 블로그 '뉴스 카테고리'(rss2json) → 2순위: 시트 → 3순위: 샘플
       const b = CFG.blog || {};
       if (b.rss && b.newsCategory) {
         try {
@@ -309,7 +353,15 @@
       }
     },
     async getBoard() {
-      // 1순위: 블로그 '게시판 카테고리' → 2순위: 시트 → 3순위: 샘플
+      // 0순위: 앱스 스크립트 엔진(블로그 서버사이드)
+      if (CFG.feedUrl) {
+        try {
+          const data = await feedFetch("board");
+          const list = (data && data.board) || [];
+          return list.length ? list : window.BREEZE_SAMPLE.board;
+        } catch (e) { return window.BREEZE_SAMPLE.board; }
+      }
+      // 1순위: 블로그 '게시판 카테고리'(rss2json) → 2순위: 시트 → 3순위: 샘플
       const b = CFG.blog || {};
       if (b.rss && b.boardCategory) {
         try {

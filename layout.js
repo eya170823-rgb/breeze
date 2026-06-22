@@ -52,10 +52,6 @@
   const sms = "sms:" + CFG.phone.replace(/[^0-9+]/g, "");
   const socials = CFG.social || {};
   const channelDefs = [
-    { label: "전화", cls: "ch-phone", url: tel,
-      svg: `<svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M6.6 10.8a15.5 15.5 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.6c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.3 2.2Z"/></svg>` },
-    { label: "문자", cls: "ch-sms", url: sms,
-      svg: `<svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M4 4h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8l-4 4V5a1 1 0 0 1 1-1Z"/></svg>` },
     { label: "네이버", cls: "ch-naver", url: socials.naver,
       svg: `<svg viewBox="0 0 24 24" width="26" height="26"><path fill="currentColor" d="M14.1 12.5 9.6 6H6v12h3.9v-6.5l4.5 6.5H18V6h-3.9v6.5Z"/></svg>` },
     { label: "카카오톡", cls: "ch-kakao", url: CFG.kakaoUrl,
@@ -82,13 +78,6 @@
   const footer = `
     <footer class="site-footer">
       <div class="container footer-grid">
-        <div class="footer-brand">
-          <div class="footer-logo">
-            <img src="assets/logo.png" alt="${CFG.brand}" onerror="this.onerror=null;this.src='assets/logo.svg'" />
-            <strong>${CFG.brand}</strong>
-          </div>
-          <p class="footer-slogan">${CFG.slogan}</p>
-        </div>
         <div class="footer-contact">
           <h4>오시는 길</h4>
           <ul class="fc-list">
@@ -98,7 +87,6 @@
             ${CFG.hours ? `<li><span>영업시간</span><em>${CFG.hours}</em></li>` : ""}
             ${CFG.parking ? `<li><span>주차</span><em>${CFG.parking}</em></li>` : ""}
           </ul>
-          <p class="fc-name">브리즈부동산중개 BREEZE</p>
         </div>
         <div class="footer-map">
           <div id="naverMap" class="nmap">
@@ -116,7 +104,7 @@
             </a>
             <a class="map-btn kakao" href="${kakaoNaviUrl}" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M5 16 3 21l5-2.2A10 10 0 1 0 5 16Z"/></svg>
-              카카오내비 길안내
+              카카오내비
             </a>
           </div>
         </div>

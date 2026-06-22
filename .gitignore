@@ -14,3 +14,12 @@ Thumbs.db
 # 로그
 *.log
 npm-debug.log*
+
+# 작업용/원본 파일 (공개 불필요)
+KakaoTalk_*.png
+shots/
+_server_nocache.py
+
+# 워터마크 미리보기 (작업용)
+워터마크-미리보기.html
+엔진코드-복사용.txt

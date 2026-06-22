@@ -114,7 +114,7 @@
   let selDeals = [];   // 다중 선택
   let curPrice = "전체";
   let curQuery = "";
-  let selRegion = "";  // 지역(동) 선택
+  let selRegions = []; // 지역(동) 선택 — 다중
   let curCat = "";     // 현재 카테고리(지역시트용)
 
   // 카테고리 아이콘 → 필터 매핑
@@ -171,16 +171,23 @@
     return esc(p.replace(/\d+/g, (n) => (+n).toLocaleString()));
   }
 
+  // 거래중/완료(공실 아님) 여부
+  function isDone(l) { return /임대중|계약완료/.test(l.status || ""); }
+
   // 가로형 리스트 카드 (왼쪽 사진 / 오른쪽 정보)
   function listingRow(l, idx) {
     const thumb = l.image
-      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" loading="lazy" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span>`
+      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" loading="lazy" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>`
       : `<span class="ph">BREEZE</span>`;
     const title = l.title || l.location || "매물";
     const spec = [l.type, areaPyeong(l.area), floorShort(l.floor)].filter((x) => x && x !== "—").join(" / ");
+    const done = isDone(l);
     return `
-      <article class="lcard reveal" data-idx="${idx}" tabindex="0">
-        <div class="lcard-photo">${thumb}<span class="lcard-deal">${esc(l.deal)}</span></div>
+      <article class="lcard reveal${done ? " is-done" : ""}" data-idx="${idx}" tabindex="0">
+        <div class="lcard-photo">${thumb}
+          ${l.deal ? `<span class="lcard-deal">${esc(l.deal)}</span>` : ""}
+          ${done ? `<span class="lcard-status">${esc(l.status)}</span>` : ""}
+        </div>
         <div class="lcard-info">
           <div class="lcard-top">
             <span class="lcard-title">${esc(title)}</span>
@@ -194,7 +201,7 @@
 
   function listingCard(l, idx) {
     const thumb = l.image
-      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" loading="lazy" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span>`
+      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" loading="lazy" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>`
       : `<span class="ph">BREEZE</span>`;
     const meta = [l.location, l.area, l.floor]
       .filter((x) => x && x !== "—")
@@ -222,10 +229,11 @@
       const deals = String(l.deal).split(/[\/,·]/).map((s) => s.trim());
       const okType = !selTypes.length || selTypes.includes(l.type);
       const okDeal = !selDeals.length || selDeals.some((d) => deals.includes(d));
-      const okRegion = !selRegion || regionOf(l) === selRegion;
+      const okRegion = !selRegions.length || selRegions.includes(regionOf(l));
       const hay = `${l.title} ${l.type} ${l.location} ${l.desc} ${l.deal} ${l.key || ""}`.toLowerCase();
       return okType && okDeal && okRegion && inPrice(l) && (!curQuery || hay.includes(curQuery.toLowerCase()));
     });
+    filtered.sort((a, b) => (isDone(a) ? 1 : 0) - (isDone(b) ? 1 : 0)); // 공실 먼저, 거래중/완료는 뒤로
     grid.innerHTML = filtered.map((l) => listingRow(l, allListings.indexOf(l))).join("");
     if (empty) empty.hidden = filtered.length > 0;
     observeReveals();
@@ -233,12 +241,12 @@
 
   function listingModalHtml(l) {
     const thumb = l.image
-      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span>`
+      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>`
       : `<span class="ph">BREEZE</span>`;
     const rows = [
-      ["매물번호", l.key], ["거래유형", l.deal], ["매물종류", l.type], ["위치", l.location],
-      ["면적", l.area], ["층", l.floor], ["방향", l.direction],
-      ["방수", l.rooms], ["등록일", l.date],
+      ["매물번호", l.key], ["상태", isDone(l) ? l.status : ""], ["거래유형", l.deal],
+      ["매물종류", l.type], ["위치", l.location], ["면적", l.area], ["층", l.floor],
+      ["방향", l.direction], ["방수", l.rooms], ["등록일", l.date],
     ].filter(([, v]) => v && v !== "—");
     const mapAddr = l.addr || l.location;
     const showMap = !l.noMap && mapAddr;
@@ -281,11 +289,13 @@
     };
     setPill("type", selTypes.length > 0,
       selTypes.length ? (TYPE_LABEL[selTypes[0]] || selTypes[0]) + (selTypes.length > 1 ? ` 외 ${selTypes.length - 1}` : "") : "종류");
+    setPill("region", selRegions.length > 0,
+      selRegions.length ? selRegions[0] + (selRegions.length > 1 ? ` 외 ${selRegions.length - 1}` : "") : "지역");
     setPill("deal", selDeals.length > 0, selDeals.length ? selDeals.join("·") : "거래");
     const po = PRICE_OPTS.find((o) => o.k === curPrice);
     setPill("price", curPrice !== "전체", curPrice !== "전체" ? po.label : "가격");
     const reset = document.getElementById("filterReset");
-    if (reset) reset.hidden = !(selTypes.length || selDeals.length || curPrice !== "전체" || selRegion);
+    if (reset) reset.hidden = !(selTypes.length || selDeals.length || curPrice !== "전체" || selRegions.length);
   }
   function sheetChip(val, label, on, single) {
     return `<button class="sheet-chip${on ? " on" : ""}" data-val="${esc(val)}" data-single="${single ? 1 : 0}">${esc(label)}</button>`;
@@ -303,6 +313,15 @@
       document.getElementById("sheetTitle").textContent = "거래유형 (여러 개 선택 가능)";
       sheetTmp = selDeals.slice();
       body.innerHTML = DEAL_OPTS.map((d) => sheetChip(d, d, sheetTmp.includes(d), false)).join("");
+    } else if (name === "region") {
+      document.getElementById("sheetTitle").textContent = "지역 · 동 (여러 곳 선택 가능)";
+      sheetTmp = selRegions.slice();
+      const counts = {};
+      allListings.forEach((l) => { const r = regionOf(l); if (r) counts[r] = (counts[r] || 0) + 1; });
+      const regions = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+      body.innerHTML = regions.length
+        ? regions.map((r) => sheetChip(r, `${r} ${counts[r]}`, sheetTmp.includes(r), false)).join("")
+        : `<p style="color:var(--gray);padding:10px">표시할 지역이 없습니다.</p>`;
     } else {
       document.getElementById("sheetTitle").textContent = "가격대";
       sheetTmp = curPrice;
@@ -334,6 +353,7 @@
     const name = document.getElementById("filterSheet").dataset.name;
     if (name === "type") selTypes = sheetTmp.slice();
     else if (name === "deal") selDeals = sheetTmp.slice();
+    else if (name === "region") selRegions = sheetTmp.slice();
     else curPrice = sheetTmp;
     closeSheet(); updatePills(); renderListings();
   }
@@ -366,7 +386,7 @@
     curCat = cat;
     selTypes = c.types.slice();
     selDeals = c.deals.slice();
-    selRegion = "";
+    selRegions = [];
     curPrice = "전체";
     updateCats();
     updatePills();
@@ -383,8 +403,8 @@
     const regions = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
     document.getElementById("regionTitle").textContent = cat + " · 지역별 매물";
     document.getElementById("regionChips").innerHTML =
-      `<button class="rchip${selRegion === "" ? " on" : ""}" data-region="">전체 ${items.length}</button>` +
-      regions.map((r) => `<button class="rchip${selRegion === r ? " on" : ""}" data-region="${esc(r)}">${esc(r)} ${counts[r]}</button>`).join("");
+      `<button class="rchip${selRegions.length === 0 ? " on" : ""}" data-region="">전체 ${items.length}</button>` +
+      regions.map((r) => `<button class="rchip${selRegions.includes(r) ? " on" : ""}" data-region="${esc(r)}">${esc(r)} ${counts[r]}</button>`).join("");
     sheet.hidden = false;
     document.body.style.overflow = "hidden";
     setTimeout(() => initRegionMap(counts), 60);
@@ -413,7 +433,7 @@
     setTimeout(() => regionMap && regionMap.invalidateSize(), 120);
   }
   function selectRegion(r) {
-    selRegion = r;
+    selRegions = r ? [r] : [];
     closeRegionSheet();
     updatePills();
     renderListings();
@@ -437,7 +457,7 @@
       const pill = e.target.closest(".fpill");
       if (!pill) return;
       if (pill.id === "filterReset") {
-        selTypes = []; selDeals = []; curPrice = "전체"; selRegion = ""; curCat = "";
+        selTypes = []; selDeals = []; curPrice = "전체"; selRegions = []; curCat = "";
         updateCats(); updatePills(); renderListings(); return;
       }
       openSheet(pill.dataset.filter);
@@ -485,10 +505,7 @@
   /* ===================================================================
      뉴스 페이지
      =================================================================== */
-  async function initNews() {
-    const grid = document.getElementById("newsGrid");
-    if (!grid) return;
-    const items = await window.BreezeSheets.getNews();
+  function renderNews(grid, items) {
     grid.innerHTML = items
       .map((n) => `
       <article class="news-card reveal">
@@ -501,15 +518,21 @@
       .join("");
     observeReveals();
   }
+  async function initNews() {
+    const grid = document.getElementById("newsGrid");
+    if (!grid) return;
+    renderNews(grid, window.BREEZE_SAMPLE.news); // 즉시 샘플 표시 (빈 화면 방지)
+    try {
+      const items = await window.BreezeSheets.getNews();
+      if (items && items.length) renderNews(grid, items); // 블로그/시트 결과로 교체
+    } catch (e) { /* 샘플 유지 */ }
+  }
 
   /* ===================================================================
      게시판 페이지
      =================================================================== */
   let allBoard = [];
-  async function initBoard() {
-    const list = document.getElementById("boardList");
-    if (!list) return;
-    allBoard = await window.BreezeSheets.getBoard();
+  function renderBoardList(list) {
     list.innerHTML = allBoard
       .map((b, i) => `
       <button class="board-row reveal" data-idx="${i}">
@@ -518,6 +541,13 @@
         <span class="board-date">${esc(b.date)}</span>
       </button>`)
       .join("");
+    observeReveals();
+  }
+  async function initBoard() {
+    const list = document.getElementById("boardList");
+    if (!list) return;
+    allBoard = window.BREEZE_SAMPLE.board; // 즉시 샘플 표시 (빈 화면 방지)
+    renderBoardList(list);
     list.addEventListener("click", (e) => {
       const row = e.target.closest(".board-row");
       if (!row) return;
@@ -532,7 +562,10 @@
           <a href="${telHref}" class="btn btn-primary" style="width:100%">전화 문의하기</a>
         </div>`);
     });
-    observeReveals();
+    try {
+      const items = await window.BreezeSheets.getBoard();
+      if (items && items.length) { allBoard = items; renderBoardList(list); } // 블로그/시트로 교체
+    } catch (e) { /* 샘플 유지 */ }
   }
 
   /* ===================================================================
