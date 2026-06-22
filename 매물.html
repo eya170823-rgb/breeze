@@ -9,8 +9,6 @@
   <link rel="icon" type="image/png" href="assets/favicon.png" />
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
   <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body data-page="listings">
@@ -55,6 +53,7 @@
           <button class="fpill fpill-reset" id="filterReset" hidden>초기화 ✕</button>
         </div>
         <div class="listing-list" id="listingGrid" aria-live="polite">
+          <div class="loading-msg"><span class="spinner"></span>매물을 불러오는 중이에요…</div>
           <div class="skeleton-card sk-row"></div><div class="skeleton-card sk-row"></div><div class="skeleton-card sk-row"></div>
         </div>
         <p class="empty-msg" id="listingEmpty" hidden>조건에 맞는 매물이 없습니다.</p>

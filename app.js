@@ -409,10 +409,27 @@
     document.body.style.overflow = "hidden";
     setTimeout(() => initRegionMap(counts), 60);
   }
+  // Leaflet(지도)은 실제 지도 열 때만 불러옴 (매물 페이지 첫 로딩 빠르게)
+  function ensureLeaflet(cb) {
+    if (window.L) return cb();
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css"; link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+    if (window.__leafletLoading) { setTimeout(() => ensureLeaflet(cb), 200); return; }
+    window.__leafletLoading = true;
+    const s = document.createElement("script");
+    s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+    s.onload = cb;
+    s.onerror = () => { const el = document.getElementById("regionMap"); if (el) el.style.display = "none"; };
+    document.head.appendChild(s);
+  }
   function initRegionMap(counts) {
     const el = document.getElementById("regionMap");
     if (!el) return;
-    if (typeof L === "undefined") { el.style.display = "none"; return; }
+    if (typeof L === "undefined") { ensureLeaflet(() => initRegionMap(counts)); return; }
     el.style.display = "";
     if (regionMap) { regionMap.remove(); regionMap = null; }
     regionMap = L.map(el, { scrollWheelZoom: false, attributionControl: false }).setView([33.43, 126.56], 10);

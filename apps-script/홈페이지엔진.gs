@@ -37,16 +37,27 @@ var BLOG_RSS = 'https://rss.blog.naver.com/eya81.xml';
 var NEWS_CATEGORY = '부동산뉴스';   // 이 카테고리 글 → 뉴스
 var BOARD_CATEGORY = '게시판';      // 이 카테고리 글 → 게시판
 
-/* ───────── 라우팅 ───────── */
+/* ───────── 라우팅 (캐시 3분: 첫 로딩 빠르게) ───────── */
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || 'listings';
-  try {
-    if (action === 'news') return reply(e, { news: getBlogPosts(NEWS_CATEGORY) });
-    if (action === 'board') return reply(e, { board: getBlogPosts(BOARD_CATEGORY) });
-    return reply(e, { listings: getListings() });
-  } catch (err) {
-    return reply(e, { error: String(err) });
+  var key = 'breeze_' + action;
+  var cache = CacheService.getScriptCache();
+  var json = cache.get(key);
+  if (!json) {
+    var obj;
+    try {
+      if (action === 'news') obj = { news: getBlogPosts(NEWS_CATEGORY) };
+      else if (action === 'board') obj = { board: getBlogPosts(BOARD_CATEGORY) };
+      else obj = { listings: getListings() };
+    } catch (err) { obj = { error: String(err) }; }
+    json = JSON.stringify(obj);
+    try { cache.put(key, json, 180); } catch (e2) {} // 3분 캐시 (100KB 초과 시 무시)
   }
+  return reply(e, json);
+}
+// 시트 바꾼 걸 즉시 보고 싶을 때 한 번 실행 (캐시 비우기)
+function clearCache() {
+  CacheService.getScriptCache().removeAll(['breeze_listings', 'breeze_news', 'breeze_board']);
 }
 
 /* ───────── 매물 ───────── */
@@ -158,17 +169,24 @@ function bumpRegistrationDates() {
     }
   });
 }
-// ★ 한 번만 실행: 매일 아침 7시 등록일 자동 갱신 예약
+// 엔진을 미리 깨워서 매물 캐시를 항상 준비해 둠 (첫 손님도 빠르게)
+function warmUp() {
+  var cache = CacheService.getScriptCache();
+  try { cache.put('breeze_listings', JSON.stringify({ listings: getListings() }), 600); } catch (e) {}
+}
+// ★ 한 번만 실행: 매일 등록일 자동 갱신 + 5분마다 엔진 예열 예약
 function installDailyTriggers() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
-    if (t.getHandlerFunction() === 'bumpRegistrationDates') ScriptApp.deleteTrigger(t);
+    var f = t.getHandlerFunction();
+    if (f === 'bumpRegistrationDates' || f === 'warmUp') ScriptApp.deleteTrigger(t);
   });
   ScriptApp.newTrigger('bumpRegistrationDates').timeBased().everyDays(1).atHour(7).create();
+  ScriptApp.newTrigger('warmUp').timeBased().everyMinutes(5).create();
 }
 
 /* ───────── 응답(JSONP) ───────── */
 function reply(e, obj) {
-  var json = JSON.stringify(obj);
+  var json = (typeof obj === 'string') ? obj : JSON.stringify(obj);
   var cb = e && e.parameter && e.parameter.callback;
   if (cb) return ContentService.createTextOutput(cb + '(' + json + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
   return ContentService.createTextOutput(json).setMimeType(ContentService.MimeType.JSON);

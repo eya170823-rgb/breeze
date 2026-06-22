@@ -347,6 +347,9 @@ img { max-width: 100%; display: block; }
 .skeleton-card.sk-news { height: 190px; }
 @keyframes shimmer { to { background-position: -200% 0; } }
 .empty-msg { text-align: center; color: var(--gray); padding: 40px 0; }
+.loading-msg { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--ink-soft); font-weight: 600; padding: 18px 0 6px; font-size: 0.95rem; }
+.spinner { width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--terra); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* ---------- 모달 ---------- */
 .modal { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
