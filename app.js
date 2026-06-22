@@ -445,12 +445,22 @@
     if (regionMap) { regionMap.remove(); regionMap = null; }
   }
 
+  function saveCache(key, data) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch (e) {} }
+  function loadCache(key) { try { const o = JSON.parse(localStorage.getItem(key) || "null"); return o ? o.d : null; } catch (e) { return null; } }
+
   async function initListings() {
     const grid = document.getElementById("listingGrid");
     if (!grid) return;
-    allListings = await window.BreezeSheets.getListings();
-    renderListings();
-    updatePills();
+    // 1) 캐시 즉시 표시 (재방문 시 빠르게) → 2) 뒤에서 최신으로 갱신
+    const showList = (list) => { allListings = list || []; renderListings(); updatePills(); };
+    const cached = loadCache("breeze_listings");
+    if (cached && cached.length) showList(cached);
+    window.BreezeSheets.getListings()
+      .then((fresh) => {
+        if (fresh && fresh.length) { saveCache("breeze_listings", fresh); showList(fresh); }
+        else if (!cached) showList(fresh);
+      })
+      .catch(() => { if (!cached) showList([]); });
 
     const bar = document.getElementById("filterBar");
     if (bar) bar.addEventListener("click", (e) => {
@@ -521,11 +531,12 @@
   async function initNews() {
     const grid = document.getElementById("newsGrid");
     if (!grid) return;
-    renderNews(grid, window.BREEZE_SAMPLE.news); // 즉시 샘플 표시 (빈 화면 방지)
+    const cachedN = loadCache("breeze_news");
+    renderNews(grid, (cachedN && cachedN.length) ? cachedN : window.BREEZE_SAMPLE.news); // 즉시 표시
     try {
       const items = await window.BreezeSheets.getNews();
-      if (items && items.length) renderNews(grid, items); // 블로그/시트 결과로 교체
-    } catch (e) { /* 샘플 유지 */ }
+      if (items && items.length) { saveCache("breeze_news", items); renderNews(grid, items); } // 최신으로 교체
+    } catch (e) { /* 캐시/샘플 유지 */ }
   }
 
   /* ===================================================================
@@ -546,7 +557,8 @@
   async function initBoard() {
     const list = document.getElementById("boardList");
     if (!list) return;
-    allBoard = window.BREEZE_SAMPLE.board; // 즉시 샘플 표시 (빈 화면 방지)
+    const cachedB = loadCache("breeze_board");
+    allBoard = (cachedB && cachedB.length) ? cachedB : window.BREEZE_SAMPLE.board; // 즉시 표시
     renderBoardList(list);
     list.addEventListener("click", (e) => {
       const row = e.target.closest(".board-row");
@@ -564,7 +576,7 @@
     });
     try {
       const items = await window.BreezeSheets.getBoard();
-      if (items && items.length) { allBoard = items; renderBoardList(list); } // 블로그/시트로 교체
+      if (items && items.length) { saveCache("breeze_board", items); allBoard = items; renderBoardList(list); } // 최신으로 교체
     } catch (e) { /* 샘플 유지 */ }
   }
 
