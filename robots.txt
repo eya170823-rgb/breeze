@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://eya170823-rgb.github.io/breeze/sitemap.xml
