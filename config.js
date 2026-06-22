@@ -67,7 +67,7 @@ window.BREEZE_CONFIG = {
   // 앱스 스크립트 '매물피드'를 웹앱으로 배포한 뒤, 그 URL(.../exec)을 여기에 붙여넣으세요.
   // 설정하면 시트의 '캘린더' 칸에 공개표시한 매물만 안전하게 홈페이지에 표시됩니다.
   // (비워두면 아래 sheetId 또는 샘플 매물을 사용)
-  feedUrl: "https://script.google.com/macros/s/AKfycbwK4UzKh3QdTOz6LIj3GO1Qp6RSbZ-jxtC10alZOkYdg8FkCXfrhyTbHEXBwDmzw23R/exec",
+  feedUrl: "https://script.google.com/macros/s/AKfycbyaYgUnLwFvLkcLD9peBbSfZ7g4jJgQhbl63epbmMD-Tj89ScFIjsUAMHmkEeSwI8qv/exec",
 
   // 구글 시트 연동 --------------------------------------------------
   // 1) 매물/소식이 들어있는 구글 시트를 엽니다.
