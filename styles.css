@@ -70,9 +70,11 @@ img { max-width: 100%; display: block; }
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 .site-header.scrolled { border-color: var(--line); box-shadow: 0 4px 20px rgba(28,26,25,0.05); }
-.nav-bar { display: flex; align-items: center; justify-content: space-between; height: 66px; }
+.nav-bar { display: flex; align-items: center; gap: 10px; height: 66px; }
 
-.logo { display: flex; align-items: center; gap: 10px; color: var(--ink); }
+.logo { display: flex; align-items: center; gap: 10px; color: var(--ink); margin-right: auto; }
+.header-cta { flex: none; display: inline-flex; align-items: center; gap: 5px; background: var(--terra); color: #fff; padding: 8px 15px; border-radius: 999px; font-weight: 700; font-size: 0.9rem; white-space: nowrap; transition: background 0.2s, transform 0.2s; }
+.header-cta:hover { background: var(--terra-deep); transform: translateY(-1px); }
 .logo-img { width: 40px; height: 40px; object-fit: contain; flex: none; }
 .logo-text { display: flex; flex-direction: column; line-height: 1.05; color: var(--ink); font-weight: 800; letter-spacing: 0.02em; }
 .logo-text small { font-weight: 500; font-size: 0.62rem; color: var(--gray); letter-spacing: 0.06em; }
@@ -437,6 +439,7 @@ img { max-width: 100%; display: block; }
 }
 @media (max-width: 720px) {
   .nav-toggle { display: flex; }
+  .header-cta { padding: 7px 12px; font-size: 0.84rem; }
   .nav-links {
     position: fixed; top: 66px; left: 0; right: 0;
     flex-direction: column; align-items: stretch; gap: 4px;
@@ -476,6 +479,9 @@ img { max-width: 100%; display: block; }
   .features .sub { font-size: 0.72rem; }
   .board-row { grid-template-columns: auto 1fr; gap: 8px 12px; padding: 14px 4px; }
   .board-date { grid-column: 2; font-size: 0.78rem; }
+  .logo-text small { display: none; } /* 아주 좁은 화면에선 로고 부제 숨겨 공간 확보 */
+  .header-cta { padding: 7px 10px; }
+  .header-cta svg { display: none; }
   .lcard-photo { flex: 0 0 108px; width: 108px; min-height: 96px; }
   .lcard-info { padding: 10px 12px 10px 0; }
   .lcard-title { font-size: 0.94rem; }

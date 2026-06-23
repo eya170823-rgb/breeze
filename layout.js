@@ -42,6 +42,10 @@
           ${navHtml}
           <a href="${tel}" class="nav-cta">전화상담</a>
         </nav>
+        <a href="매물.html" class="header-cta" aria-label="매물 보기">
+          <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" d="M4 11 12 4l8 7"/><path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" d="M6 10v10h12V10"/></svg>
+          매물 보기
+        </a>
         <button class="nav-toggle" id="navToggle" aria-label="메뉴 열기" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
