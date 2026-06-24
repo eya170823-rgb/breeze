@@ -151,11 +151,12 @@
   function inPrice(l) {
     if (curPrice === "전체") return true;
     const v = +(l.priceVal || 0);
-    if (curPrice === "a") return v > 0 && v <= 5000;
-    if (curPrice === "b") return v > 5000 && v <= 10000;
-    if (curPrice === "c") return v > 10000 && v <= 30000;
-    if (curPrice === "d") return v > 30000 && v <= 50000;
-    if (curPrice === "e") return v > 50000;
+    if (curPrice === "a") return v > 0 && v <= 1000;
+    if (curPrice === "b") return v > 1000 && v <= 3000;
+    if (curPrice === "c") return v > 3000 && v <= 5000;
+    if (curPrice === "d") return v > 5000 && v <= 10000;
+    if (curPrice === "e") return v > 10000 && v <= 30000;
+    if (curPrice === "f") return v > 30000;
     return true;
   }
   function areaPyeong(area) {
@@ -266,11 +267,12 @@
   /* ---------- 당근식 필터 (알약 + 바텀시트) ---------- */
   const PRICE_OPTS = [
     { k: "전체", label: "전체" },
-    { k: "a", label: "5천만원 이하" },
-    { k: "b", label: "5천만 ~ 1억" },
-    { k: "c", label: "1억 ~ 3억" },
-    { k: "d", label: "3억 ~ 5억" },
-    { k: "e", label: "5억 이상" },
+    { k: "a", label: "1천만원 이하" },
+    { k: "b", label: "1천만 ~ 3천만" },
+    { k: "c", label: "3천만 ~ 5천만" },
+    { k: "d", label: "5천만 ~ 1억" },
+    { k: "e", label: "1억 ~ 3억" },
+    { k: "f", label: "3억 이상" },
   ];
   const DEAL_OPTS = ["매매", "전세", "월세", "연세"];
   let sheetTmp = null;
