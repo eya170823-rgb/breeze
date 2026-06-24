@@ -1,0 +1,14 @@
+{
+  "name": "브리즈부동산중개 BREEZE",
+  "short_name": "BREEZE",
+  "description": "제주 부동산·매물 — 브리즈부동산중개 BREEZE",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#bd6a52",
+  "icons": [
+    { "src": "assets/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "assets/favicon.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
