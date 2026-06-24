@@ -440,7 +440,7 @@
       if (!c) return;
       const icon = L.divIcon({
         className: "rbubble-wrap",
-        html: `<div class="rbubble"><b>${counts[r]}</b><span>${esc(r)}</span></div>`,
+        html: `<div class="rbubble"><span>${esc(r)}</span><b>${counts[r]}</b></div>`,
         iconSize: [1, 1],
       });
       L.marker(c, { icon }).addTo(regionMap).on("click", () => selectRegion(r));
