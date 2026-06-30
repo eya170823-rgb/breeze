@@ -34,7 +34,7 @@ git commit -m "BREEZE 홈페이지 첫 배포"
 ```powershell
 winget install --id GitHub.cli      # 처음 한 번만 설치
 gh auth login                        # 브라우저로 로그인 (화면 안내 따라가기)
-gh repo create breeze-realestate --public --source=. --remote=origin --push
+gh repo create breeze --public --source=. --remote=origin --push
 ```
 
 끝입니다. 이후부터는 **3번**의 명령만 반복하면 됩니다.
@@ -42,11 +42,11 @@ gh repo create breeze-realestate --public --source=. --remote=origin --push
 ### 방법 B — 웹에서 직접
 
 1. https://github.com/new 접속
-2. Repository name: `breeze-realestate` → **Create repository**
+2. Repository name: `breeze` → **Create repository**
 3. 아래 명령으로 연결 (`내아이디` 를 본인 GitHub 아이디로 변경):
 
 ```powershell
-git remote add origin https://github.com/내아이디/breeze-realestate.git
+git remote add origin https://github.com/내아이디/breeze.git
 git push -u origin main
 ```
 
@@ -78,7 +78,8 @@ VS Code에서는: 변경사항 입력칸에 메시지 → **✓ Commit** → **S
 2. *Build and deployment* → Source: **Deploy from a branch**
 3. Branch: **main** / 폴더: **/(root)** → **Save**
 4. 1~2분 뒤 새로고침하면 주소가 나옵니다:
-   **`https://내아이디.github.io/breeze-realestate/`**
+   **`https://내아이디.github.io/breeze/`**
+   (현재 이 사이트의 실제 주소: https://eya170823-rgb.github.io/breeze/)
 
 이 주소를 명함·블로그·문자 등에 그대로 공유하시면 됩니다. 📱
 
