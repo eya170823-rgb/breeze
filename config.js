@@ -13,14 +13,14 @@ window.BREEZE_CONFIG = {
   email: "eya170823@gmail.com",
   hours: "09:00 - 20:00",
   parking: "전면주차 가능",
-  address: "제주특별자치도 제주시 연동 260-18",
-  addressShort: "제주시 연동 260-18",
+  address: "제주특별자치도 제주시 삼무로1길 13, 1층",
+  addressShort: "제주시 삼무로1길 13, 1층 (연동)",
 
   // 카카오톡 상담 링크(채널/오픈채팅). 비우면 '카카오 상담' 버튼 숨김.
   kakaoUrl: "",
 
-  // 전자책 링크. 비우면 '준비중'.
-  ebookUrl: "",
+  // 전자책 링크. 비우면 '준비중'. (예스24 — 알라딘·밀리의서재 등록되면 추가)
+  ebookUrl: "https://www.yes24.com/product/goods/193451248",
 
   // 채널 링크 (비우면 '준비중'). 카카오톡은 위 kakaoUrl 사용.
   social: {
@@ -34,7 +34,8 @@ window.BREEZE_CONFIG = {
   company: {
     name: "브리즈 부동산중개",
     ceo: "박정희",
-    bizNo: "", // 발급되면 입력 (예: "123-45-67890")
+    bizNo: "547-48-01397", // 사업자등록번호
+    regNo: "50110-2026-00057", // 중개사무소 등록번호 (부동산 광고 시 표기 의무)
   },
 
   // 네이버 지도 — NCP Client ID 넣으면 페이지 안에 실제 지도. 비우면 '네이버 지도에서 보기' 패널.

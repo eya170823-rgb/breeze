@@ -121,6 +121,7 @@
             <p class="biz-name">${comp.name || CFG.brandKo} ${CFG.brand}</p>
             ${comp.ceo ? `<p class="biz-line">대표자 ${comp.ceo}</p>` : ""}
             ${comp.bizNo ? `<p class="biz-line">사업자등록번호 ${comp.bizNo}</p>` : ""}
+            ${comp.regNo ? `<p class="biz-line">중개등록번호 ${comp.regNo}</p>` : ""}
           </div>
         </div>
       </div>
