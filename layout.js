@@ -20,7 +20,7 @@
   const nav = [
     { key: "home", label: "홈", href: "index.html" },
     { key: "listings", label: "매물", href: "매물.html" },
-    { key: "news", label: "뉴스", href: "뉴스.html" },
+    { key: "news", label: "소식", href: "뉴스.html" },
     { key: "board", label: "게시판", href: "게시판.html" },
   ];
 

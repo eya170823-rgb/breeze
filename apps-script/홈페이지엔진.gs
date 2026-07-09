@@ -34,8 +34,8 @@ var STATUS_WORDS = ['공실', '임대중', '계약완료', '거래완료'];
 
 // 블로그 자동 연동
 var BLOG_RSS = 'https://rss.blog.naver.com/eya81.xml';
-var NEWS_CATEGORY = '부동산뉴스';   // 이 카테고리 글 → 뉴스
-var BOARD_CATEGORY = '게시판';      // 이 카테고리 글 → 게시판
+var NEWS_CATEGORY = ['부동산뉴스', '단지정보'];   // 이 카테고리들 → 뉴스 (여러 개 가능)
+var BOARD_CATEGORY = '게시판';                    // 이 카테고리 글 → 게시판
 
 /* ───────── 라우팅 (캐시 3분: 첫 로딩 빠르게) ───────── */
 function doGet(e) {
@@ -123,6 +123,7 @@ function getListings() {
 
 /* ───────── 블로그(뉴스·게시판) ───────── */
 function getBlogPosts(category) {
+  var wanted = Array.isArray(category) ? category : (category ? [category] : []); // 문자열/배열 둘 다 지원
   var res = UrlFetchApp.fetch(BLOG_RSS, { muteHttpExceptions: true });
   if (res.getResponseCode() !== 200) return [];
   var xml = res.getContentText();
@@ -130,7 +131,7 @@ function getBlogPosts(category) {
   var posts = [];
   items.forEach(function (it) {
     var cat = tagVal(it, 'category');
-    if (category && cat.indexOf(category) === -1) return;
+    if (wanted.length && !wanted.some(function (c) { return cat.indexOf(c) !== -1; })) return;
     posts.push({
       title: tagVal(it, 'title'),
       body: stripTags(tagVal(it, 'description')).slice(0, 180),
