@@ -514,3 +514,14 @@ img { max-width: 100%; display: block; }
   .author-inner { grid-template-columns: 1fr; gap: 28px; }
   .author-cover img { max-width: 280px; }
 }
+
+/* ===== 전문 분야 섹션 ===== */
+.expertise-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.exp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 24px; transition: transform 0.3s var(--ease), box-shadow 0.3s; }
+.exp-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.exp-tag { display: inline-block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; color: var(--terra); background: var(--terra-soft); padding: 4px 12px; border-radius: 999px; margin-bottom: 12px; }
+.exp-card h3 { font-size: 1.15rem; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+.exp-list { color: var(--ink-soft); font-size: 0.98rem; line-height: 1.7; }
+.exp-note { margin-top: 22px; padding: 18px 22px; background: var(--terra-soft); border-radius: var(--radius-sm); color: var(--ink); font-size: 1rem; line-height: 1.65; }
+.exp-note b { color: var(--terra-deep); font-weight: 700; }
+@media (max-width: 680px) { .expertise-grid { grid-template-columns: 1fr; } }
