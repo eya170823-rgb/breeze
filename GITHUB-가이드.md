@@ -1,29 +1,27 @@
-# GitHub 연동 · 인터넷 게시 가이드
+# 선물 ④ — 깃허브 가이드 (계정 만들기 ~ Pages 켜기)
 
-이 프로젝트는 이미 **git 저장소로 초기화**되어 있습니다.
-이제 GitHub에 올리면 ① 코드 백업 ② 무료 인터넷 주소(GitHub Pages) 두 가지를 한 번에 얻습니다.
+GitHub에 홈페이지 파일을 올리면 ① 코드 백업 ② 무료 인터넷 주소(GitHub Pages) 두 가지를 한 번에 얻습니다.
 
 ---
 
 ## 0. 준비물 (한 번만)
 
 1. **GitHub 계정** — https://github.com 에서 가입 (무료)
-2. **Git** — 이미 설치되어 있습니다. (`git --version` 으로 확인)
+2. **Git** — VS Code 설치 시 함께 설치됩니다. (`git --version` 으로 확인)
 3. VS Code를 쓰신다면 왼쪽 **Source Control(소스 제어)** 아이콘만으로도 가능합니다.
 
 ---
 
 ## 1. 첫 커밋 만들기
 
-VS Code 터미널(또는 PowerShell)에서 이 폴더 안에서 실행합니다.
+VS Code 터미널(또는 PowerShell)에서 홈페이지 폴더 안에서 실행합니다.
 
 ```powershell
-git config user.name "브리즈부동산"
-git config user.email "eya170823@gmail.com"
-git commit -m "BREEZE 홈페이지 첫 배포"
+git config user.name "본인이름"
+git config user.email "본인이메일@gmail.com"
+git add .
+git commit -m "홈페이지 첫 배포"
 ```
-
-> 파일은 이미 `git add` 된 상태라 바로 `commit` 하면 됩니다.
 
 ---
 
@@ -83,13 +81,4 @@ VS Code에서는: 변경사항 입력칸에 메시지 → **✓ Commit** → **S
 
 이 주소를 명함·블로그·문자 등에 그대로 공유하시면 됩니다. 📱
 
-> 나중에 `breeze-jeju.com` 같은 **개인 도메인**도 연결할 수 있습니다 (Pages 설정의 Custom domain). 필요하시면 알려주세요.
-
----
-
-## 다음 단계
-
-- **.exe 실행 파일**(데스크톱 GUI) 만들기 → 요청하시면 `Electron` 설정을 추가해 드립니다.
-- **크롬 확장 프로그램** 만들기 → 요청하시면 `manifest.json` 등을 추가해 드립니다.
-
-두 가지 모두 **지금 만든 웹 코드를 그대로 재사용**하므로 빠르게 추가됩니다.
+> 💡 나중에 `내가게이름.com` 같은 **개인 도메인**도 연결할 수 있습니다 (Pages 설정의 Custom domain).

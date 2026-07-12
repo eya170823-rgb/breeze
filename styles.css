@@ -452,8 +452,9 @@ img { max-width: 100%; display: block; }
   .nav-links a { padding: 13px 14px; font-size: 1.02rem; }
   .nav-links a.nav-cta { text-align: center; margin-top: 6px; }
   .float-call { display: flex; }
-  .hero { padding: 64px 0 60px; }
-  .section { padding: 58px 0; }
+  .hero { padding: 48px 0 44px; }
+  .section { padding: 40px 0; }
+  .section-head { margin-bottom: 20px; }
   /* 모바일: 한눈에 보기 카드를 얇은 가로 바로 축소 */
   .quick-grid { gap: 10px; }
   .quick-card { display: flex; align-items: center; gap: 10px; padding: 13px 16px; }
@@ -511,20 +512,26 @@ img { max-width: 100%; display: block; }
 .author-meta span { color: var(--gray); font-weight: 500; }
 .author-actions { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
 @media (max-width: 780px) {
-  .author-inner { grid-template-columns: 1fr; gap: 28px; }
-  .author-cover img { max-width: 280px; }
+  .author-inner { grid-template-columns: 1fr; gap: 20px; }
+  .author-cover img { max-width: 220px; }
+  .author-eyebrow { margin-bottom: 12px; }
+  .author-text { margin-top: 12px; line-height: 1.7; }
+  .author-actions { margin-top: 18px; }
 }
 
 /* ===== 전문 분야 섹션 ===== */
-.expertise-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.exp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 26px 24px; transition: transform 0.3s var(--ease), box-shadow 0.3s; }
+.expertise-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.exp-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 16px; transition: transform 0.3s var(--ease), box-shadow 0.3s; }
 .exp-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-.exp-tag { display: inline-block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; color: var(--terra); background: var(--terra-soft); padding: 4px 12px; border-radius: 999px; margin-bottom: 12px; }
-.exp-card h3 { font-size: 1.15rem; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
-.exp-list { color: var(--ink-soft); font-size: 0.98rem; line-height: 1.7; }
+.exp-tag { display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; color: var(--terra); background: var(--terra-soft); padding: 3px 9px; border-radius: 999px; margin-bottom: 6px; }
+.exp-card h3 { font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.exp-list { color: var(--ink-soft); font-size: 0.88rem; line-height: 1.5; }
 .exp-note { margin-top: 22px; padding: 18px 22px; background: var(--terra-soft); border-radius: var(--radius-sm); color: var(--ink); font-size: 1rem; line-height: 1.65; }
 .exp-note b { color: var(--terra-deep); font-weight: 700; }
-@media (max-width: 680px) { .expertise-grid { grid-template-columns: 1fr; } }
+@media (max-width: 680px) {
+  .expertise-grid { grid-template-columns: 1fr; gap: 12px; }
+  .exp-note { margin-top: 14px; padding: 14px 18px; }
+}
 
 /* ===== 대표 사진 (author 섹션) ===== */
 .author-meta { display: flex; align-items: center; gap: 12px; }
