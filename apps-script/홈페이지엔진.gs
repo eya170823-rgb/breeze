@@ -24,8 +24,9 @@ var LISTING_TABS = [
   '아파트', '오피스텔', '원투룸', '연립다세대', '단독 다가구 상가주택',
   '상가', '상가건물', '공장 창고', '토지', '분양권', '기타매물'
 ];
-var PUBLISH_FIELD = '등록자';     // 이 칸에 '광고완료'면 공개
-var PUBLISH_MARK = '광고완료';
+// 공개 조건: 'key' 칸과 '등록자' 칸에 둘 다 값이 있으면 홈페이지에 노출
+var KEY_FIELD = 'key';
+var REGISTRANT_FIELD = '등록자';
 
 var NO_ADDR_TYPES = ['상가', '상가건물', '토지', '공장 창고', '기타매물']; // 주소·지도 숨김
 var NO_KEYMONEY_TYPES = ['상가', '상가건물'];   // 권리금 금액 숨김
@@ -34,30 +35,21 @@ var STATUS_WORDS = ['공실', '임대중', '계약완료', '거래완료'];
 
 // 블로그 자동 연동
 var BLOG_RSS = 'https://rss.blog.naver.com/eya81.xml';
-var NEWS_CATEGORY = ['부동산뉴스', '단지정보'];   // 이 카테고리들 → 뉴스 (여러 개 가능)
+var NEWS_CATEGORY = ['부동산뉴스', '단지정보', '지역정보', '생활정보'];   // 이 카테고리들 → 소식 (여러 개 가능, 매물정보는 제외)
 var BOARD_CATEGORY = '게시판';                    // 이 카테고리 글 → 게시판
 
-/* ───────── 라우팅 (캐시 3분: 첫 로딩 빠르게) ───────── */
+/* ───────── 라우팅 (캐시 없음: 시트를 고치면 새로고침 즉시 반영) ─────────
+   ▸ 매번 시트/블로그를 실시간으로 읽으므로, 매물·글을 추가하면 재배포 없이 바로 뜹니다.
+   ▸ (엔진 '코드'를 바꿀 때만 한 번 재배포가 필요합니다.) */
 function doGet(e) {
   var action = (e && e.parameter && e.parameter.action) || 'listings';
-  var key = 'breeze_' + action;
-  var cache = CacheService.getScriptCache();
-  var json = cache.get(key);
-  if (!json) {
-    var obj;
-    try {
-      if (action === 'news') obj = { news: getBlogPosts(NEWS_CATEGORY) };
-      else if (action === 'board') obj = { board: getBlogPosts(BOARD_CATEGORY) };
-      else obj = { listings: getListings() };
-    } catch (err) { obj = { error: String(err) }; }
-    json = JSON.stringify(obj);
-    try { cache.put(key, json, 180); } catch (e2) {} // 3분 캐시 (100KB 초과 시 무시)
-  }
-  return reply(e, json);
-}
-// 시트 바꾼 걸 즉시 보고 싶을 때 한 번 실행 (캐시 비우기)
-function clearCache() {
-  CacheService.getScriptCache().removeAll(['breeze_listings', 'breeze_news', 'breeze_board']);
+  var obj;
+  try {
+    if (action === 'news') obj = { news: getBlogPosts(NEWS_CATEGORY) };
+    else if (action === 'board') obj = { board: getBlogPosts(BOARD_CATEGORY) };
+    else obj = { listings: getListings() };
+  } catch (err) { obj = { error: String(err) }; }
+  return reply(e, JSON.stringify(obj));
 }
 
 /* ───────── 매물 ───────── */
@@ -77,7 +69,7 @@ function getListings() {
       var row = values[r];
       var g = function (name) { var i = col[name]; return (i != null && row[i] != null) ? row[i] : ''; };
 
-      if (String(g(PUBLISH_FIELD)).indexOf(PUBLISH_MARK) === -1) continue; // 광고완료만
+      if (!String(g(KEY_FIELD)).trim() || !String(g(REGISTRANT_FIELD)).trim()) continue; // key+등록자 둘 다 있어야 공개
 
       var dealRaw = String(g('구분')).trim();
       var statusCol = String(g('상태')).trim();
@@ -161,19 +153,18 @@ function bumpRegistrationDates() {
     if (data.length < 2) return;
     var head = data[0].map(function (h) { return String(h).trim(); });
     var col = {}; head.forEach(function (h, i) { col[h] = i; });
-    var rCol = col[PUBLISH_FIELD], dCol = col['등록일'];
-    if (rCol == null || dCol == null) return;
+    var kCol = col[KEY_FIELD], rCol = col[REGISTRANT_FIELD], dCol = col['등록일'];
+    if (kCol == null || rCol == null || dCol == null) return;
     for (var r = 1; r < data.length; r++) {
-      if (String(data[r][rCol]).indexOf(PUBLISH_MARK) > -1) {
+      if (String(data[r][kCol]).trim() && String(data[r][rCol]).trim()) { // key+등록자 둘 다 있는 공개 매물만
         sh.getRange(r + 1, dCol + 1).setValue(today);
       }
     }
   });
 }
-// 엔진을 미리 깨워서 매물 캐시를 항상 준비해 둠 (첫 손님도 빠르게)
+// 엔진 인스턴스를 미리 깨워 콜드스타트를 줄임 (캐시는 쓰지 않음 → 항상 실시간)
 function warmUp() {
-  var cache = CacheService.getScriptCache();
-  try { cache.put('breeze_listings', JSON.stringify({ listings: getListings() }), 600); } catch (e) {}
+  try { getListings(); } catch (e) {}
 }
 // ★ 한 번만 실행: 매일 등록일 자동 갱신 + 5분마다 엔진 예열 예약
 function installDailyTriggers() {
