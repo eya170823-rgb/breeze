@@ -399,13 +399,24 @@ img { max-width: 100%; display: block; }
 .intake-text p { color: var(--ink-soft); font-size: 0.94rem; line-height: 1.7; }
 .intake-btn { flex: none; }
 
-/* ---------- 페이지 상단 배너 (컴팩트: 목록이 바로 보이게) ---------- */
+/* ---------- 페이지 상단 배너 (기본: 매물 등) ---------- */
 .page-hero { background: var(--surface); border-bottom: 1px solid var(--line); padding: 28px 0 22px; }
 .page-hero .ph-eyebrow { font-size: 0.74rem; letter-spacing: 0.2em; color: var(--terra); font-weight: 600; }
 .page-hero h1 { font-family: var(--font-display); font-size: clamp(1.6rem, 5vw, 2.2rem); font-weight: 800; margin: 6px 0 6px; }
 .page-hero .ph-sub { color: var(--ink-soft); max-width: 640px; font-size: 0.92rem; }
-/* 배너 바로 아래 목록은 위쪽 여백을 좁혀 즉시 노출 */
 .page-hero + .section { padding-top: 26px; }
+
+/* 소식 페이지(부동산 소식·브리즈 소식)만 초컴팩트 → 클릭 즉시 줄목록 노출 */
+body[data-page="news"] .page-hero,
+body[data-page="board"] .page-hero { padding: 15px 0 13px; }
+body[data-page="news"] .page-hero .ph-eyebrow,
+body[data-page="board"] .page-hero .ph-eyebrow,
+body[data-page="news"] .page-hero .ph-sub,
+body[data-page="board"] .page-hero .ph-sub { display: none; }
+body[data-page="news"] .page-hero h1,
+body[data-page="board"] .page-hero h1 { font-size: clamp(1.3rem, 4.5vw, 1.7rem); margin: 0; }
+body[data-page="news"] .page-hero + .section,
+body[data-page="board"] .page-hero + .section { padding-top: 14px; }
 
 /* ---------- 바로가기 카드 ---------- */
 .quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
