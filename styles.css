@@ -498,7 +498,10 @@ body[data-page="board"] .page-hero + .section { padding-top: 14px; }
   /* 모바일에서도 한 줄 유지: 분류·제목·날짜를 한 행에 (날짜가 아랫줄로 안 내려감) */
   .board-row { grid-template-columns: auto 1fr auto; gap: 10px; padding: 11px 4px; }
   .board-cat { font-size: 0.68rem; padding: 3px 8px; }
-  .board-title { font-size: 0.94rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* 제목은 자르지 않고 전부 표시 — 짧으면 한 줄, 길면 두 줄까지 자연스럽게 */
+  .board-title { font-size: 0.94rem; word-break: keep-all; overflow-wrap: anywhere; line-height: 1.35; }
+  .board-row { align-items: start; }
+  .board-cat, .board-date { margin-top: 1px; }
   .board-date { font-size: 0.74rem; }
   .logo-text small { display: none; } /* 아주 좁은 화면에선 로고 부제 숨겨 공간 확보 */
   .header-cta { padding: 7px 10px; }
