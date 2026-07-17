@@ -537,13 +537,11 @@
   function renderNews(grid, items) {
     grid.innerHTML = items
       .map((n) => `
-      <article class="news-card reveal">
-        <span class="news-cat">${esc(n.category)}</span>
-        <h3>${esc(n.title)}</h3>
-        <p>${esc(n.body)}</p>
-        ${n.link ? `<a class="more" href="${esc(n.link)}" target="_blank" rel="noopener">자세히 보기 →</a>` : ""}
-        ${n.date ? `<span class="news-date">${esc(n.date)}</span>` : ""}
-      </article>`)
+      <a class="board-row reveal"${n.link ? ` href="${esc(n.link)}" target="_blank" rel="noopener"` : ""}>
+        <span class="board-cat">${esc(n.category)}</span>
+        <span class="board-title">${esc(n.title)}</span>
+        <span class="board-date">${esc(n.date)}</span>
+      </a>`)
       .join("");
     observeReveals();
   }
@@ -564,12 +562,12 @@
   let allBoard = [];
   function renderBoardList(list) {
     list.innerHTML = allBoard
-      .map((b, i) => `
-      <button class="board-row reveal" data-idx="${i}">
+      .map((b) => `
+      <a class="board-row reveal"${b.link ? ` href="${esc(b.link)}" target="_blank" rel="noopener"` : ""}>
         <span class="board-cat">${esc(b.category)}</span>
         <span class="board-title">${esc(b.title)}</span>
         <span class="board-date">${esc(b.date)}</span>
-      </button>`)
+      </a>`)
       .join("");
     observeReveals();
   }
@@ -579,20 +577,6 @@
     const cachedB = loadCache("breeze_board");
     allBoard = (cachedB && cachedB.length) ? cachedB : window.BREEZE_SAMPLE.board; // 즉시 표시
     renderBoardList(list);
-    list.addEventListener("click", (e) => {
-      const row = e.target.closest(".board-row");
-      if (!row) return;
-      const b = allBoard[+row.dataset.idx];
-      openModal(`
-        <div class="modal-content">
-          <span class="deal-tag">${esc(b.category)}</span>
-          <h3>${esc(b.title)}</h3>
-          <p class="board-meta">${esc(b.author)} · ${esc(b.date)}</p>
-          <p class="m-desc" style="white-space:pre-line">${esc(b.body)}</p>
-          ${b.link ? `<a href="${esc(b.link)}" target="_blank" rel="noopener" class="btn btn-ghost" style="width:100%;margin-bottom:8px">블로그에서 자세히 보기 →</a>` : ""}
-          <a href="${telHref}" class="btn btn-primary" style="width:100%">전화 문의하기</a>
-        </div>`);
-    });
     try {
       const items = await window.BreezeSheets.getBoard();
       if (items && items.length) { saveCache("breeze_board", items); allBoard = items; renderBoardList(list); } // 최신으로 교체
