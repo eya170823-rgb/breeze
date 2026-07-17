@@ -249,6 +249,9 @@ img { max-width: 100%; display: block; }
 .lc-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--ink-soft); font-size: 0.86rem; margin-top: auto; }
 .lc-key { font-size: 0.74rem; color: var(--gray); margin-top: 2px; letter-spacing: 0.02em; }
 .lc-meta span { display: inline-flex; align-items: center; gap: 4px; }
+/* 홈 첫 화면 최신 매물 미리보기 그리드 */
+.listing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.home-listings-more { text-align: center; margin-top: 30px; }
 
 /* ---------- 소식 ---------- */
 .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
@@ -430,7 +433,7 @@ body[data-page="board"] .page-hero + .section { padding-top: 14px; }
 
 /* ---------- 게시판 ---------- */
 .board-list { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
-.board-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 18px 8px; cursor: pointer; transition: background 0.2s; font: inherit; text-decoration: none; color: inherit; }
+.board-row { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 13px 8px; cursor: pointer; transition: background 0.2s; font: inherit; text-decoration: none; color: inherit; }
 .board-row:hover { background: var(--surface); }
 .board-cat { font-size: 0.76rem; font-weight: 600; color: var(--terra); background: var(--terra-soft); padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
 .board-title { font-size: 1.02rem; font-weight: 600; color: var(--ink); word-break: keep-all; overflow-wrap: anywhere; line-height: 1.4; }
@@ -492,8 +495,11 @@ body[data-page="board"] .page-hero + .section { padding-top: 14px; }
   .features .ic { width: 44px; height: 44px; }
   .features strong { font-size: 0.9rem; }
   .features .sub { font-size: 0.72rem; }
-  .board-row { grid-template-columns: auto 1fr; gap: 8px 12px; padding: 14px 4px; }
-  .board-date { grid-column: 2; font-size: 0.78rem; }
+  /* 모바일에서도 한 줄 유지: 분류·제목·날짜를 한 행에 (날짜가 아랫줄로 안 내려감) */
+  .board-row { grid-template-columns: auto 1fr auto; gap: 10px; padding: 11px 4px; }
+  .board-cat { font-size: 0.68rem; padding: 3px 8px; }
+  .board-title { font-size: 0.94rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board-date { font-size: 0.74rem; }
   .logo-text small { display: none; } /* 아주 좁은 화면에선 로고 부제 숨겨 공간 확보 */
   .header-cta { padding: 7px 10px; }
   .header-cta svg { display: none; }
