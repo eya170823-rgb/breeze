@@ -91,6 +91,18 @@
     );
   }
 
+  // 소식 날짜를 짧게: "Fri, 17 Jul 2026" / "2026-07-17" → "26.07.17"
+  const MON3 = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
+  function shortDate(s) {
+    s = String(s || "").trim();
+    if (!s) return "";
+    let m = s.match(/(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/); // RSS 영문 날짜
+    if (m) return m[3].slice(2) + "." + (MON3[m[2]] || "01") + "." + String(m[1]).padStart(2, "0");
+    m = s.match(/(\d{4})[-.](\d{1,2})[-.](\d{1,2})/); // ISO 날짜
+    if (m) return m[1].slice(2) + "." + String(m[2]).padStart(2, "0") + "." + String(m[3]).padStart(2, "0");
+    return s;
+  }
+
   /* ---------- 모달 ---------- */
   function openModal(html) {
     const modal = document.getElementById("listingModal");
@@ -540,7 +552,7 @@
       <a class="board-row reveal"${n.link ? ` href="${esc(n.link)}" target="_blank" rel="noopener"` : ""}>
         <span class="board-cat">${esc(n.category)}</span>
         <span class="board-title">${esc(n.title)}</span>
-        <span class="board-date">${esc(n.date)}</span>
+        <span class="board-date">${esc(shortDate(n.date))}</span>
       </a>`)
       .join("");
     observeReveals();
@@ -566,7 +578,7 @@
       <a class="board-row reveal"${b.link ? ` href="${esc(b.link)}" target="_blank" rel="noopener"` : ""}>
         <span class="board-cat">${esc(b.category)}</span>
         <span class="board-title">${esc(b.title)}</span>
-        <span class="board-date">${esc(b.date)}</span>
+        <span class="board-date">${esc(shortDate(b.date))}</span>
       </a>`)
       .join("");
     observeReveals();
