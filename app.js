@@ -178,6 +178,17 @@
   function floorShort(floor) {
     return String(floor || "").split("/")[0].trim();
   }
+  // 아파트 제목 = 동 + 아파트명 + 평수 + 층수 (엔진 title엔 '동 아파트명'까지 들어있음)
+  function displayTitle(l) {
+    let t = l.title || l.location || "매물";
+    if (l.type === "아파트") {
+      const py = areaPyeong(l.area);   // "32평" 또는 ""
+      const fl = floorShort(l.floor);  // "10"
+      if (py) t += " " + py;
+      if (fl) t += " " + fl + "층";
+    }
+    return t;
+  }
   function priceLine(l) {
     const p = String(l.price || "");
     if (/^[\d,]+$/.test(p)) return esc(formatPrice(p));
@@ -192,7 +203,7 @@
     const thumb = l.image
       ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" loading="lazy" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>`
       : `<span class="ph">BREEZE</span>`;
-    const title = l.title || l.location || "매물";
+    const title = displayTitle(l);
     const spec = [l.type, areaPyeong(l.area), floorShort(l.floor)].filter((x) => x && x !== "—").join(" / ");
     const done = isDone(l);
     return `
@@ -204,7 +215,6 @@
         <div class="lcard-info">
           <div class="lcard-top">
             <span class="lcard-title">${esc(title)}</span>
-            ${l.key ? `<span class="lcard-no">${esc(l.key)}</span>` : ""}
           </div>
           <div class="lcard-price">${priceLine(l)}</div>
           <div class="lcard-spec">${esc(spec)}</div>
@@ -227,10 +237,9 @@
           <div class="lc-badge"><span class="deal">${esc(l.deal)}</span><span>${esc(l.type)}</span></div>
         </div>
         <div class="lc-body">
-          <div class="lc-title">${esc(l.title)}</div>
+          <div class="lc-title">${esc(displayTitle(l))}</div>
           <div class="lc-price">${formatPrice(l.price)}</div>
           <div class="lc-meta">${meta}</div>
-          ${l.key ? `<div class="lc-key">매물번호 ${esc(l.key)}</div>` : ""}
         </div>
       </article>`;
   }
@@ -257,9 +266,9 @@
       ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>`
       : `<span class="ph">BREEZE</span>`;
     const rows = [
-      ["매물번호", l.key], ["상태", isDone(l) ? l.status : ""], ["거래유형", l.deal],
+      ["상태", isDone(l) ? l.status : ""], ["거래유형", l.deal],
       ["매물종류", l.type], ["위치", l.location], ["면적", l.area], ["층", l.floor],
-      ["방향", l.direction], ["방수", l.rooms], ["등록일", l.date],
+      ["방향", l.direction], ["방수", l.rooms], ["등록일", shortDate(l.date)],
     ].filter(([, v]) => v && v !== "—");
     const mapAddr = l.addr || l.location;
     const showMap = !l.noMap && mapAddr;
@@ -267,7 +276,7 @@
       <div class="modal-thumb">${thumb}</div>
       <div class="modal-content">
         <span class="deal-tag">${esc(l.deal)} · ${esc(l.type)}</span>
-        <h3>${esc(l.title)}</h3>
+        <h3>${esc(displayTitle(l))}</h3>
         <div class="m-price">${priceLine(l)}</div>
         <dl class="m-grid">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
         ${l.desc ? `<p class="m-desc">${esc(l.desc)}</p>` : ""}
