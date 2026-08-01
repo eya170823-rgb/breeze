@@ -47,8 +47,9 @@ window.BREEZE_CONFIG = {
   },
 
   // ★ 매물·뉴스·게시판 엔진 (구글 앱스 스크립트 웹앱 주소)
-  //   매물 = 시트의 '등록자=광고완료', 뉴스/게시판 = 블로그 카테고리에서 자동.
-  //   (블로그 RSS·카테고리·매물 가공·개인정보 제외는 모두 엔진 'apps-script/홈페이지엔진.gs'에서 처리)
-  //   엔진 교체 시 이 주소만 새 배포 주소로 바꾸면 됩니다.
-  feedUrl: "https://script.google.com/macros/s/AKfycbyaYgUnLwFvLkcLD9peBbSfZ7g4jJgQhbl63epbmMD-Tj89ScFIjsUAMHmkEeSwI8qv/exec",
+  //   매물 = 브리즈 CRM '매물관리' 시트 (2026-08-01 CRM 백엔드 v9로 이전 — 계약완료·테스트 제외, 개인정보·지번 미노출)
+  //   뉴스/게시판 = 네이버 블로그 카테고리에서 자동 (CRM 백엔드가 동일하게 처리)
+  //   ⚠ 이 주소는 CRM GAS v9 배포 후에만 동작 — v9 배포 전에는 푸시하지 말 것.
+  //   (예전 홈페이지엔진: AKfycbyaYgUnLwFvLkcLD9peBbSfZ7g4jJgQhbl63epbmMD-Tj89ScFIjsUAMHmkEeSwI8qv)
+  feedUrl: "https://script.google.com/macros/s/AKfycbwM-LUL3NJ19XGeedp0Toz71cYR_RW38bVuh4bfSIzTd2qn-dGyGFLfjsodIyTA4LWu/exec",
 };
