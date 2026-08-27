@@ -559,3 +559,47 @@ body[data-page="board"] .page-hero + .section { padding-top: 14px; }
 .author-meta { display: flex; align-items: center; gap: 12px; }
 .author-meta .author-who { color: var(--ink); font-weight: 700; }
 .author-photo { width: 54px; height: 54px; border-radius: 50%; object-fit: cover; object-position: center top; border: 2px solid #fff; box-shadow: var(--shadow); flex: none; }
+
+/* =====================================================================
+   2026-08-27 보완 — 빈 카테고리 비활성 / 거래유형별 가격시트 /
+                     매물사진 여러 장 / 피드 실패 안내
+   ===================================================================== */
+
+/* --- 매물 0건 카테고리는 눌리지 않게 (매물이 들어오면 자동으로 다시 켜짐) --- */
+.cat { position: relative; }
+.cat:disabled, .cat.is-empty { opacity: 0.38; cursor: default; filter: grayscale(1); }
+.cat:disabled:hover, .cat.is-empty:hover { border-color: var(--line); transform: none; }
+.cat-n { position: absolute; top: 7px; right: 9px; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: var(--terra); color: #fff; font-size: 0.68rem; font-weight: 700;
+  line-height: 18px; text-align: center; }
+
+/* --- 가격 시트: 거래유형 고르기 + 그 유형의 가격 구간 --- */
+.sheet-body > p, .sheet-body > .price-deals, .sheet-body > .sheet-chips { flex: 0 0 100%; width: 100%; }
+.sheet-chips { display: flex; flex-wrap: wrap; gap: 9px; }
+.sheet-note { color: var(--gray); font-size: 0.86rem; line-height: 1.5; margin: 0 0 4px; }
+.sheet-sub { color: var(--ink-soft); font-size: 0.88rem; margin: 12px 0 4px; }
+.sheet-sub b { color: var(--terra); }
+.price-deals { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.pdeal { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 10px 4px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: #fff; color: var(--ink-soft);
+  font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.15s var(--ease); }
+.pdeal b { font-size: 0.72rem; font-weight: 700; color: var(--gray); }
+.pdeal.on { border-color: var(--terra); background: var(--terra-soft); color: var(--terra); }
+.pdeal.on b { color: var(--terra); }
+.pdeal:disabled { opacity: 0.34; cursor: default; }
+
+/* --- 매물사진: 여러 장이면 장수 표시 + 상세에서 옆으로 넘겨보기 --- */
+.photo-n { position: absolute; right: 7px; bottom: 7px; z-index: 3; background: rgba(28,26,25,0.62);
+  color: #fff; font-size: 0.68rem; font-weight: 600; padding: 2px 7px; border-radius: 999px; }
+.m-gallery { display: flex; height: 100%; width: 100%; overflow-x: auto; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.m-gallery::-webkit-scrollbar { display: none; }
+.m-gallery img { flex: 0 0 100%; width: 100%; height: 100%; object-fit: cover; scroll-snap-align: center; }
+
+/* --- 피드를 못 불러왔을 때 (지어낸 샘플 매물 대신 사실대로 안내) --- */
+.feed-error { grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; gap: 9px;
+  text-align: center; padding: 40px 20px; border: 1px dashed var(--line); border-radius: var(--radius);
+  background: var(--surface); }
+.feed-error b { font-size: 1rem; color: var(--ink); }
+.feed-error span { font-size: 0.88rem; color: var(--gray); line-height: 1.55; }
+.feed-error .btn { margin-top: 6px; }

@@ -91,6 +91,59 @@
     );
   }
 
+  /* ---------- 매물 사진 (2026-08-27) ----------
+     CRM이 사진을 보내주기 시작하면 코드를 안 고쳐도 바로 화면에 뜨도록 미리 받아둔다.
+     ▸ 받는 칸 이름: image / images / photo / photos 아무거나 (쉼표·줄바꿈으로 여러 장)
+     ▸ 구글 드라이브 공유링크는 <img src>로 바로 안 뜨므로 thumbnail 주소로 바꿔준다.
+       (드라이브 파일이 '링크가 있는 모든 사용자에게 공개'여야 보입니다)
+     ▸ 워터마크가 찍힌 '보정완료' 사진만 내보내는 원칙은 CRM 쪽에서 지켜집니다. */
+  function driveImg(u) {
+    const s = String(u || "").trim();
+    if (!s) return "";
+    const m = s.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:[^]*&)?id=|thumbnail\?(?:[^]*&)?id=)([-\w]{20,})/);
+    if (m) return "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w1200";
+    return /^https?:\/\//i.test(s) ? s : "";
+  }
+  function photoUrls(l) {
+    const raw = [l.image, l.images, l.photo, l.photos].filter(Boolean).join(",");
+    const out = [];
+    raw.split(/[,\n|]+/).forEach((u) => {
+      const v = driveImg(u);
+      if (v && out.indexOf(v) === -1) out.push(v);
+    });
+    return out;
+  }
+
+  /* ---------- 홈페이지에 내보낼 매물인지 (2026-08-27) ----------
+     매물장에 입력된 게 전부 그대로 올라가는 구조라, 종류·면적이 비어 있는
+     '기타매물'까지 위치도 없이 홈페이지에 떴다. 정보가 덜 채워진 매물은 일단 숨긴다.
+     ※ 임시 조치입니다. 근본 해결은 CRM 광고관리에 '홈페이지' 플랫폼을 추가해
+        사장님이 켠 매물만 나가게 하는 것 — 보완계획 문서 3단계 참고. */
+  const HIDDEN = [];
+  function isPublishable(l) {
+    if (!l) return false;
+    if (!l.type || l.type === "기타매물") return false;                  // 물건유형 미분류
+    if (!String(l.price || "").replace(/[^0-9]/g, "")) return false;     // 가격 없음
+    if (!String(l.area || "").trim()) return false;                      // 면적 없음
+    if (!l.region && !l.location) return false;                          // 위치 없음
+    return true;
+  }
+  function publishable(list) {
+    HIDDEN.length = 0;
+    const ok = (list || []).filter((l) => {
+      if (isPublishable(l)) return true;
+      HIDDEN.push((l && l.key) || (l && l.title) || "?");
+      return false;
+    });
+    if (HIDDEN.length) {
+      console.info(
+        "[BREEZE] 정보가 덜 채워져 홈페이지에서 숨긴 매물 " + HIDDEN.length + "건: " + HIDDEN.join(", ") +
+        "\n→ CRM 매물관리에서 물건유형(kind)·면적(area)·가격을 채우면 바로 올라갑니다."
+      );
+    }
+    return ok;
+  }
+
   // 소식 날짜를 짧게: "Fri, 17 Jul 2026" / "2026-07-17" → "26.07.17"
   const MON3 = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
   function shortDate(s) {
@@ -125,6 +178,7 @@
   let selTypes = [];   // 다중 선택
   let selDeals = [];   // 다중 선택
   let curPrice = "전체";
+  let curPriceDeal = "월세"; // 가격 구간이 어느 거래유형 기준인지 (매물 불러온 뒤 최다 유형으로 맞춤)
   let curQuery = "";
   let selRegions = []; // 지역(동) 선택 — 다중
   let curCat = "";     // 현재 카테고리(지역시트용)
@@ -159,17 +213,67 @@
     "상가", "상가건물", "공장 창고", "토지", "분양권", "기타매물"];
   const TYPE_LABEL = { "단독 다가구 상가주택": "단독다가구 상가주택", "공장 창고": "공장창고" };
 
-  // 가격대 필터 (priceVal: 만원)
+  /* ---------- 가격대 필터 (2026-08-27 개편) ----------
+     예전엔 거래유형과 상관없이 priceVal(만원) 하나로 걸렀다. 그런데 월세의 priceVal은
+     '보증금'이라, 매물 대부분이 월세인 지금은 "1천만원 이하"에 거의 전부 들어가고
+     "3억 이상"은 언제나 0건이었다 — 필터가 사실상 없는 것과 같았다.
+     → 거래유형마다 기준 금액이 다르므로(매매가 / 전세보증금 / 월 임대료 / 연 임대료)
+        가격 구간도 거래유형별로 따로 둔다. 금액 단위는 모두 '만원'. */
+  const DEAL_OPTS = ["매매", "전세", "월세", "연세"];
+  const PRICE_BANDS = {
+    "매매": { unit: "매매가", opts: [
+      { k: "s1", label: "1억원 이하", lo: 0, hi: 10000 },
+      { k: "s2", label: "1억 ~ 3억원", lo: 10000, hi: 30000 },
+      { k: "s3", label: "3억 ~ 5억원", lo: 30000, hi: 50000 },
+      { k: "s4", label: "5억 ~ 10억원", lo: 50000, hi: 100000 },
+      { k: "s5", label: "10억원 이상", lo: 100000, hi: Infinity },
+    ] },
+    "전세": { unit: "전세보증금", opts: [
+      { k: "j1", label: "5천만원 이하", lo: 0, hi: 5000 },
+      { k: "j2", label: "5천만 ~ 1억원", lo: 5000, hi: 10000 },
+      { k: "j3", label: "1억 ~ 2억원", lo: 10000, hi: 20000 },
+      { k: "j4", label: "2억 ~ 3억원", lo: 20000, hi: 30000 },
+      { k: "j5", label: "3억원 이상", lo: 30000, hi: Infinity },
+    ] },
+    "월세": { unit: "월 임대료", opts: [
+      { k: "m1", label: "월 30만원 이하", lo: 0, hi: 30 },
+      { k: "m2", label: "월 30 ~ 50만원", lo: 30, hi: 50 },
+      { k: "m3", label: "월 50 ~ 80만원", lo: 50, hi: 80 },
+      { k: "m4", label: "월 80 ~ 150만원", lo: 80, hi: 150 },
+      { k: "m5", label: "월 150만원 이상", lo: 150, hi: Infinity },
+    ] },
+    "연세": { unit: "연 임대료", opts: [
+      { k: "y1", label: "연 500만원 이하", lo: 0, hi: 500 },
+      { k: "y2", label: "연 500 ~ 1,000만원", lo: 500, hi: 1000 },
+      { k: "y3", label: "연 1,000 ~ 2,000만원", lo: 1000, hi: 2000 },
+      { k: "y4", label: "연 2,000만원 이상", lo: 2000, hi: Infinity },
+    ] },
+  };
+
+  // 그 매물이 해당 거래유형으로 나와 있는지 ("매매/전세"처럼 겹쳐 있을 수 있다)
+  function hasDeal(l, deal) {
+    return String(l.deal).split(/[\/,·]/).map((s) => s.trim()).indexOf(deal) > -1;
+  }
+  // 거래유형별 비교 기준 금액(만원). 월세·연세는 가격 문구에서 임대료를 뽑는다.
+  //   "보증금 300 / 월 49" → 49 · "보증금 2,000 / 연 2,000" → 2000
+  function priceBasis(l, deal) {
+    if (deal === "월세" || deal === "연세") {
+      const m = String(l.price || "").match(deal === "월세" ? /월\s*([\d,.]+)/ : /연\s*([\d,.]+)/);
+      return m ? parseFloat(m[1].replace(/,/g, "")) : NaN;
+    }
+    return +(l.priceVal || 0); // 매매가 · 전세보증금
+  }
+  function priceBand() {
+    const b = PRICE_BANDS[curPriceDeal];
+    return b ? b.opts.filter((o) => o.k === curPrice)[0] : null;
+  }
   function inPrice(l) {
     if (curPrice === "전체") return true;
-    const v = +(l.priceVal || 0);
-    if (curPrice === "a") return v > 0 && v <= 1000;
-    if (curPrice === "b") return v > 1000 && v <= 3000;
-    if (curPrice === "c") return v > 3000 && v <= 5000;
-    if (curPrice === "d") return v > 5000 && v <= 10000;
-    if (curPrice === "e") return v > 10000 && v <= 30000;
-    if (curPrice === "f") return v > 30000;
-    return true;
+    const band = priceBand();
+    if (!band) return true;
+    if (!hasDeal(l, curPriceDeal)) return false; // 다른 거래유형 매물은 이 가격대에 해당 없음
+    const v = priceBasis(l, curPriceDeal);
+    return isFinite(v) && v > band.lo && v <= band.hi;
   }
   function areaPyeong(area) {
     const m = String(area || "").match(/([\d.]+)\s*평/);
@@ -198,11 +302,18 @@
   // 거래중/완료(공실 아님) 여부
   function isDone(l) { return /임대중|계약완료/.test(l.status || ""); }
 
+  /* 대표 사진 한 장 (사진이 없으면 BREEZE 회색 박스).
+     사진이 여러 장이면 오른쪽 아래에 장수를 표시한다. */
+  function thumbHtml(l, lazy) {
+    const ps = photoUrls(l);
+    if (!ps.length) return `<span class="ph">BREEZE</span>`;
+    return `<img src="${esc(ps[0])}" alt="${esc(displayTitle(l))}"${lazy ? ' loading="lazy"' : ""} draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>` +
+      (ps.length > 1 ? `<span class="photo-n" aria-label="사진 ${ps.length}장">📷 ${ps.length}</span>` : "");
+  }
+
   // 가로형 리스트 카드 (왼쪽 사진 / 오른쪽 정보)
   function listingRow(l, idx) {
-    const thumb = l.image
-      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" loading="lazy" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>`
-      : `<span class="ph">BREEZE</span>`;
+    const thumb = thumbHtml(l, true);
     const title = displayTitle(l);
     const spec = [l.type, areaPyeong(l.area), floorShort(l.floor)].filter((x) => x && x !== "—").join(" / ");
     const done = isDone(l);
@@ -223,9 +334,7 @@
   }
 
   function listingCard(l, idx) {
-    const thumb = l.image
-      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" loading="lazy" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>`
-      : `<span class="ph">BREEZE</span>`;
+    const thumb = thumbHtml(l, true);
     const meta = [l.location, l.area, l.floor]
       .filter((x) => x && x !== "—")
       .map((x) => `<span>${esc(x)}</span>`)
@@ -238,7 +347,7 @@
         </div>
         <div class="lc-body">
           <div class="lc-title">${esc(displayTitle(l))}</div>
-          <div class="lc-price">${formatPrice(l.price)}</div>
+          <div class="lc-price">${priceLine(l)}</div>
           <div class="lc-meta">${meta}</div>
         </div>
       </article>`;
@@ -262,9 +371,13 @@
   }
 
   function listingModalHtml(l) {
-    const thumb = l.image
-      ? `<img src="${esc(l.image)}" alt="${esc(l.title)}" draggable="false" oncontextmenu="return false" onerror="this.style.display='none';this.parentNode.querySelector('.ph').style.display='flex'" /><span class="ph" style="display:none">BREEZE</span><span class="wm" aria-hidden="true"></span>`
-      : `<span class="ph">BREEZE</span>`;
+    // 사진이 2장 이상이면 옆으로 넘겨보는 띠, 1장이면 그대로, 없으면 회색 박스
+    const ps = photoUrls(l);
+    const thumb = ps.length > 1
+      ? `<div class="m-gallery">${ps.map((u, i) =>
+          `<img src="${esc(u)}" alt="${esc(displayTitle(l))} 사진 ${i + 1}"${i ? ' loading="lazy"' : ""} draggable="false" oncontextmenu="return false" onerror="this.remove()" />`
+        ).join("")}</div><span class="wm" aria-hidden="true"></span>`
+      : thumbHtml(l, false);
     const rows = [
       ["상태", isDone(l) ? l.status : ""], ["거래유형", l.deal],
       ["매물종류", l.type], ["위치", l.location], ["면적", l.area], ["층", l.floor],
@@ -285,17 +398,8 @@
       </div>`;
   }
 
-  /* ---------- 당근식 필터 (알약 + 바텀시트) ---------- */
-  const PRICE_OPTS = [
-    { k: "전체", label: "전체" },
-    { k: "a", label: "1천만원 이하" },
-    { k: "b", label: "1천만 ~ 3천만" },
-    { k: "c", label: "3천만 ~ 5천만" },
-    { k: "d", label: "5천만 ~ 1억" },
-    { k: "e", label: "1억 ~ 3억" },
-    { k: "f", label: "3억 이상" },
-  ];
-  const DEAL_OPTS = ["매매", "전세", "월세", "연세"];
+  /* ---------- 당근식 필터 (알약 + 바텀시트) ----------
+     가격 구간표(PRICE_BANDS)와 거래유형 목록(DEAL_OPTS)은 위쪽 '가격대 필터'에 있습니다. */
   let sheetTmp = null;
 
   function presentTypes() {
@@ -315,8 +419,8 @@
     setPill("region", selRegions.length > 0,
       selRegions.length ? selRegions[0] + (selRegions.length > 1 ? ` 외 ${selRegions.length - 1}` : "") : "지역");
     setPill("deal", selDeals.length > 0, selDeals.length ? selDeals.join("·") : "거래");
-    const po = PRICE_OPTS.find((o) => o.k === curPrice);
-    setPill("price", curPrice !== "전체", curPrice !== "전체" ? po.label : "가격");
+    const band = priceBand();
+    setPill("price", !!band, band ? band.label : "가격");
     const reset = document.getElementById("filterReset");
     if (reset) reset.hidden = !(selTypes.length || selDeals.length || curPrice !== "전체" || selRegions.length);
   }
@@ -347,11 +451,36 @@
         : `<p style="color:var(--gray);padding:10px">표시할 지역이 없습니다.</p>`;
     } else {
       document.getElementById("sheetTitle").textContent = "가격대";
-      sheetTmp = curPrice;
-      body.innerHTML = PRICE_OPTS.map((o) => sheetChip(o.k, o.label, sheetTmp === o.k, true)).join("");
+      // 매물이 있는 거래유형을 기본으로 (없으면 지금 기준 유지)
+      const best = DEAL_OPTS.filter((d) => allListings.some((l) => hasDeal(l, d)))
+        .sort((a, b) => allListings.filter((l) => hasDeal(l, b)).length - allListings.filter((l) => hasDeal(l, a)).length)[0];
+      sheetTmp = { deal: (curPrice !== "전체" ? curPriceDeal : (best || curPriceDeal)), k: curPrice };
+      renderPriceBody();
     }
     sheet.hidden = false;
     document.body.style.overflow = "hidden";
+  }
+
+  /* 가격 시트 = [거래유형 고르기] + [그 유형의 가격 구간].
+     거래유형마다 기준 금액이 달라서(매매가 / 보증금 / 월 임대료) 한 화면에서 같이 고른다. */
+  function renderPriceBody() {
+    const body = document.getElementById("sheetBody");
+    if (!body) return;
+    const deal = sheetTmp.deal;
+    const band = PRICE_BANDS[deal] || PRICE_BANDS["월세"];
+    const n = (d) => allListings.filter((l) => hasDeal(l, d)).length;
+    body.innerHTML =
+      `<p class="sheet-note">거래유형마다 기준 금액이 다릅니다. 거래유형을 먼저 골라 주세요.</p>` +
+      `<div class="price-deals">` +
+        DEAL_OPTS.map((d) =>
+          `<button type="button" class="pdeal${d === deal ? " on" : ""}" data-pdeal="${esc(d)}"${n(d) ? "" : " disabled"}>${esc(d)}<b>${n(d)}</b></button>`
+        ).join("") +
+      `</div>` +
+      `<p class="sheet-sub">${esc(deal)} · <b>${esc(band.unit)}</b> 기준</p>` +
+      `<div class="sheet-chips">` +
+        sheetChip("전체", deal + " 전체", sheetTmp.k === "전체", true) +
+        band.opts.map((o) => sheetChip(o.k, o.label, sheetTmp.k === o.k, true)).join("") +
+      `</div>`;
   }
   function closeSheet() {
     const sheet = document.getElementById("filterSheet");
@@ -359,9 +488,23 @@
     document.body.style.overflow = "";
   }
   function onSheetChip(e) {
+    // 가격 시트의 거래유형 버튼 — 누르면 그 유형의 가격 구간으로 다시 그린다
+    const pd = e.target.closest(".pdeal");
+    if (pd && !pd.disabled) {
+      sheetTmp = { deal: pd.dataset.pdeal, k: "전체" };
+      renderPriceBody();
+      return;
+    }
     const chip = e.target.closest(".sheet-chip");
     if (!chip) return;
     const val = chip.dataset.val;
+    const sheetName = document.getElementById("filterSheet").dataset.name;
+    if (sheetName === "price") {
+      document.querySelectorAll("#sheetBody .sheet-chip").forEach((c) => c.classList.remove("on"));
+      chip.classList.add("on");
+      sheetTmp.k = val;
+      return;
+    }
     if (chip.dataset.single === "1") {
       document.querySelectorAll("#sheetBody .sheet-chip").forEach((c) => c.classList.remove("on"));
       chip.classList.add("on");
@@ -377,12 +520,19 @@
     if (name === "type") selTypes = sheetTmp.slice();
     else if (name === "deal") selDeals = sheetTmp.slice();
     else if (name === "region") selRegions = sheetTmp.slice();
-    else curPrice = sheetTmp;
+    else {
+      curPriceDeal = sheetTmp.deal;
+      curPrice = sheetTmp.k;
+      // 가격 구간을 고르면 그 거래유형으로 목록도 맞춰준다 (매매를 보면서 월세 가격대를
+      // 고르면 결과가 0건이 되어 "필터가 고장났다"고 느끼게 되므로)
+      if (curPrice !== "전체") selDeals = [curPriceDeal];
+    }
     closeSheet(); updatePills(); renderListings();
   }
   function resetSheet() {
     const name = document.getElementById("filterSheet").dataset.name;
-    sheetTmp = name === "price" ? "전체" : [];
+    if (name === "price") { sheetTmp = { deal: sheetTmp.deal, k: "전체" }; renderPriceBody(); return; }
+    sheetTmp = [];
     document.querySelectorAll("#sheetBody .sheet-chip").forEach((c) => {
       c.classList.toggle("on", c.dataset.single === "1" && c.dataset.val === "전체");
     });
@@ -403,9 +553,26 @@
   function updateCats() {
     document.querySelectorAll(".cat").forEach((b) => b.classList.toggle("active", b.dataset.cat === curCat));
   }
+  /* 매물이 하나도 없는 카테고리 비활성화 (2026-08-27)
+     예전엔 아파트·오피스텔·상가임대를 눌러도 "전체 0"과 텅 빈 지도만 떴다.
+     지금 매물 구성에 맞춰 개수를 표시하고, 0건이면 아예 눌리지 않게 한다.
+     ※ 매물이 들어오면 자동으로 다시 켜집니다 — 따로 손댈 것 없음. */
+  function updateCatAvailability() {
+    document.querySelectorAll(".cat").forEach((b) => {
+      const cat = b.dataset.cat;
+      const n = CATEGORIES[cat] ? allListings.filter(matchCategory(cat)).length : 0;
+      b.disabled = n === 0;
+      b.classList.toggle("is-empty", n === 0);
+      b.setAttribute("title", n ? cat + " " + n + "건" : cat + " 매물이 아직 없습니다");
+      const badge = b.querySelector(".cat-n");
+      if (badge) badge.textContent = n || "";
+      else if (n) b.insertAdjacentHTML("beforeend", '<span class="cat-n">' + n + "</span>");
+    });
+  }
   function onCategory(cat) {
     const c = CATEGORIES[cat];
     if (!c) return;
+    if (!allListings.some(matchCategory(cat))) return; // 매물 0건이면 빈 화면만 뜨므로 무시
     curCat = cat;
     selTypes = c.types.slice();
     selDeals = c.deals.slice();
@@ -488,19 +655,40 @@
   function saveCache(key, data) { try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), d: data })); } catch (e) {} }
   function loadCache(key) { try { const o = JSON.parse(localStorage.getItem(key) || "null"); return o ? o.d : null; } catch (e) { return null; } }
 
+  // 피드를 못 불러왔을 때 — 지어낸 샘플 대신 사실대로 알리고 전화로 연결한다
+  function feedErrorHtml(what) {
+    return `<div class="feed-error">
+        <b>${esc(what)}을 불러오지 못했습니다.</b>
+        <span>잠시 후 새로고침해 주세요. 급하시면 바로 전화 주세요.</span>
+        <a href="${telHref}" class="btn btn-primary">${esc(CFG.phone)} 전화하기</a>
+      </div>`;
+  }
+
   async function initListings() {
     const grid = document.getElementById("listingGrid");
     if (!grid) return;
     // 1) 캐시 즉시 표시 (재방문 시 빠르게) → 2) 뒤에서 최신으로 갱신
-    const showList = (list) => { allListings = list || []; renderListings(); updatePills(); };
+    const showList = (list) => {
+      allListings = publishable(list);       // 정보가 덜 채워진 매물은 제외
+      // 가격 구간의 기준 거래유형을 지금 매물 구성에 맞춘다 (지금은 월세가 대부분)
+      const best = DEAL_OPTS.filter((d) => allListings.some((l) => hasDeal(l, d)))
+        .sort((a, b) => allListings.filter((l) => hasDeal(l, b)).length - allListings.filter((l) => hasDeal(l, a)).length)[0];
+      if (best && curPrice === "전체") curPriceDeal = best;
+      renderListings();
+      updatePills();
+      updateCatAvailability();
+    };
     const cached = loadCache("breeze_listings");
     if (cached && cached.length) showList(cached);
     window.BreezeSheets.getListings()
       .then((fresh) => {
-        if (fresh && fresh.length) { saveCache("breeze_listings", fresh); showList(fresh); }
-        else if (!cached) showList(fresh);
+        saveCache("breeze_listings", fresh || []);
+        showList(fresh);
       })
-      .catch(() => { if (!cached) showList([]); });
+      .catch((e) => {
+        console.warn("매물 로드 실패", e);
+        if (!(cached && cached.length)) grid.innerHTML = feedErrorHtml("매물");
+      });
 
     const bar = document.getElementById("filterBar");
     if (bar) bar.addEventListener("click", (e) => {
@@ -570,11 +758,15 @@
     const grid = document.getElementById("newsGrid");
     if (!grid) return;
     const cachedN = loadCache("breeze_news");
-    renderNews(grid, (cachedN && cachedN.length) ? cachedN : window.BREEZE_SAMPLE.news); // 즉시 표시
+    const hadCache = !!(cachedN && cachedN.length);
+    if (hadCache) renderNews(grid, cachedN); // 캐시가 있으면 즉시 표시 (없으면 스켈레톤 유지)
     try {
       const items = await window.BreezeSheets.getNews();
-      if (items && items.length) { saveCache("breeze_news", items); renderNews(grid, items); } // 최신으로 교체
-    } catch (e) { /* 캐시/샘플 유지 */ }
+      if (items && items.length) { saveCache("breeze_news", items); renderNews(grid, items); }
+      else if (!hadCache) grid.innerHTML = `<p class="empty-msg">아직 등록된 소식이 없습니다.</p>`;
+    } catch (e) {
+      if (!hadCache) grid.innerHTML = feedErrorHtml("부동산 소식");
+    }
   }
 
   /* ===================================================================
@@ -596,12 +788,15 @@
     const list = document.getElementById("boardList");
     if (!list) return;
     const cachedB = loadCache("breeze_board");
-    allBoard = (cachedB && cachedB.length) ? cachedB : window.BREEZE_SAMPLE.board; // 즉시 표시
-    renderBoardList(list);
+    const hadCache = !!(cachedB && cachedB.length);
+    if (hadCache) { allBoard = cachedB; renderBoardList(list); } // 없으면 스켈레톤 유지
     try {
       const items = await window.BreezeSheets.getBoard();
-      if (items && items.length) { saveCache("breeze_board", items); allBoard = items; renderBoardList(list); } // 최신으로 교체
-    } catch (e) { /* 샘플 유지 */ }
+      if (items && items.length) { saveCache("breeze_board", items); allBoard = items; renderBoardList(list); }
+      else if (!hadCache) list.innerHTML = `<p class="empty-msg">아직 등록된 소식이 없습니다.</p>`;
+    } catch (e) {
+      if (!hadCache) list.innerHTML = feedErrorHtml("브리즈 소식");
+    }
   }
 
   /* ===================================================================
@@ -610,13 +805,31 @@
   async function initHomePreview() {
     const grid = document.getElementById("previewGrid");
     if (!grid) return;
-    const items = (await window.BreezeSheets.getListings()).slice(0, 3);
-    grid.innerHTML = items.map((l, i) => listingCard(l, i)).join("");
+    let items = [];
+    const draw = (list) => {
+      items = publishable(list).slice(0, 3);
+      grid.innerHTML = items.length
+        ? items.map((l, i) => listingCard(l, i)).join("")
+        : `<p class="empty-msg">등록된 매물이 없습니다.</p>`;
+      observeReveals();
+    };
+    // 카드 클릭은 한 번만 연결 (items가 바뀌어도 최신 배열을 참조한다)
     grid.addEventListener("click", (e) => {
       const card = e.target.closest(".listing-card");
-      if (card) openModal(listingModalHtml(items[+card.dataset.idx]));
+      if (card && items[+card.dataset.idx]) openModal(listingModalHtml(items[+card.dataset.idx]));
     });
-    observeReveals();
+    // 매물 페이지와 같은 캐시를 써서 앱스스크립트 콜드스타트 동안 화면이 비지 않게 한다
+    const cached = loadCache("breeze_listings");
+    if (cached && cached.length) draw(cached);
+    else grid.innerHTML = `<div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>`;
+    try {
+      const fresh = await window.BreezeSheets.getListings();
+      saveCache("breeze_listings", fresh || []);
+      draw(fresh);
+    } catch (e) {
+      console.warn("최신 매물 로드 실패", e);
+      if (!(cached && cached.length)) grid.innerHTML = feedErrorHtml("매물");
+    }
   }
 
   /* ---------- 스크롤 리빌 ---------- */
