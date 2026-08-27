@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>브리즈 홈페이지 보완계획 (1장)</title>
+<style>
+  @page { size: A4 portrait; margin: 9mm 11mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Pretendard", "맑은 고딕", "Malgun Gothic", sans-serif;
+         font-size: 8.4pt; line-height: 1.33; color: #1c1a19; }
+  .sheet { max-width: 186mm; margin: 0 auto; }
+
+  header { border-bottom: 2pt solid #bd6a52; padding-bottom: 4pt; margin-bottom: 7pt;
+           display: flex; align-items: flex-end; justify-content: space-between; gap: 10pt; }
+  h1 { font-size: 14.2pt; font-weight: 800; letter-spacing: -0.02em; }
+  h1 small { display: block; font-size: 8.2pt; font-weight: 500; color: #8c877f; margin-top: 2pt; letter-spacing: 0; }
+  .meta { text-align: right; font-size: 7.4pt; color: #8c877f; line-height: 1.5; white-space: nowrap; }
+
+  h2 { font-size: 9.6pt; font-weight: 800; margin: 7pt 0 3pt; padding-left: 6pt;
+       border-left: 3pt solid #bd6a52; }
+  h2:first-of-type { margin-top: 0; }
+  h2 em { font-style: normal; font-weight: 500; font-size: 8pt; color: #8c877f; margin-left: 4pt; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 0.5pt solid #ddd8d3; padding: 2.4pt 4.2pt; vertical-align: top; }
+  th { background: #f7f4f1; font-weight: 700; font-size: 7.9pt; text-align: left; }
+  td.n { text-align: center; width: 7%; font-weight: 700; color: #bd6a52; white-space: nowrap; }
+  td.k { width: 24%; font-weight: 700; }
+  td.w { width: 15%; color: #6b6560; }
+  .ok { color: #2f7d52; font-weight: 700; }
+  .hot { background: #fdf3ef; }
+  b.t { color: #bd6a52; }
+
+  .two { display: flex; gap: 8pt; }
+  .two > * { flex: 1; }
+
+  .box { border: 0.6pt solid #e7e3df; border-radius: 3pt; padding: 4.4pt 6pt; background: #fbf9f8; }
+  .box h3 { font-size: 8.6pt; font-weight: 800; margin-bottom: 2.5pt; }
+  .box p { margin-bottom: 2.5pt; }
+  .box ul { margin: 0 0 0 12pt; }
+  .box li { margin-bottom: 1.5pt; }
+  code { font-family: Consolas, "D2Coding", monospace; font-size: 7.7pt;
+         background: #efeae6; padding: 0.5pt 3pt; border-radius: 2pt; }
+
+  .warn { border-left: 3pt solid #c9453c; background: #fdf2f1; }
+  .warn h3 { color: #a8352d; }
+
+  footer { margin-top: 7pt; padding-top: 4pt; border-top: 0.6pt solid #e7e3df;
+           font-size: 7.2pt; color: #8c877f; display: flex; justify-content: space-between; gap: 8pt; }
+
+  @media screen {
+    body { background: #eceae7; padding: 16px; }
+    .sheet { background: #fff; padding: 11mm 12mm; box-shadow: 0 2px 14px rgba(0,0,0,.13); }
+    .hint { max-width: 186mm; margin: 0 auto 10px; font-size: 12px; color: #555;
+            background: #fff8e6; border: 1px solid #e8d9a8; border-radius: 6px; padding: 8px 12px; }
+  }
+  @media print { .hint { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="hint">🖨️ <b>Ctrl + P</b> 를 누르고 <b>A4 · 세로 · 배율 100%</b> 로 인쇄하세요. 딱 1장으로 나옵니다.</div>
+
+<div class="sheet">
+
+  <header>
+    <h1>브리즈 홈페이지 보완계획
+      <small>바른 기준, 가치 있는 동행 — BREEZE</small></h1>
+    <div class="meta">
+      2026. 08. 27.<br />
+      eya170823-rgb.github.io/breeze<br />
+      매물 23건 · 노출 20 / 숨김 3
+    </div>
+  </header>
+
+  <h2>① 오늘 고친 것 <em>실제 매물 데이터로 확인 완료 · 아직 인터넷엔 안 올림</em></h2>
+  <table>
+    <tr><th style="width:7%">번호</th><th style="width:24%">고친 것</th><th>왜 고쳤나</th><th style="width:30%">확인된 결과</th></tr>
+    <tr>
+      <td class="n">1</td><td class="k">매물사진 연동 준비</td>
+      <td>사진 정리가 끝나면 <b class="t">CRM 한 줄만</b> 고쳐도 바로 뜨도록</td>
+      <td>드라이브 링크 자동변환 · 여러 장 · 장수 뱃지 <span class="ok">통과</span></td>
+    </tr>
+    <tr>
+      <td class="n">2</td><td class="k">가짜 샘플 매물 삭제</td>
+      <td>연결이 끊기면 <b>지어낸 매물</b>이 진짜처럼 노출 → 허위광고 소지</td>
+      <td>샘플 완전 제거, 실패 시 “불러오지 못했습니다 + 전화하기”</td>
+    </tr>
+    <tr>
+      <td class="n">3</td><td class="k">가격 필터 개편</td>
+      <td>월세 기준값이 ‘보증금’이라 <b>“1천 이하”에 20건 전부</b>, “3억 이상”은 늘 0건</td>
+      <td>거래유형별 기준으로 분리 → 월30~50 <b>13건</b> / 월50~80 <b>7건</b></td>
+    </tr>
+    <tr>
+      <td class="n">4</td><td class="k">빈 카테고리 잠금</td>
+      <td>아파트·오피스텔·상가임대를 눌러도 <b>빈 화면</b>만 열렸음</td>
+      <td>원투룸만 활성(20 뱃지) · 나머지 3개 회색·클릭 불가</td>
+    </tr>
+    <tr>
+      <td class="n">5</td><td class="k">미완성 매물 숨김<br /><span style="font-weight:400;color:#8c877f">(임시조치)</span></td>
+      <td>매물장에 입력된 게 <b>전부 그대로</b> 올라가는 구조라서</td>
+      <td>종류·면적·가격·위치 중 하나라도 비면 숨김 → 3건 숨김</td>
+    </tr>
+  </table>
+
+  <div class="two" style="margin-top:6pt">
+    <div class="box">
+      <h3>② 지금 바로 살릴 수 있는 매물 3건</h3>
+      <p>CRM 매물관리에서 <b class="t">물건유형 · 면적 · 주소</b>만 채우면 자동으로 다시 올라갑니다.</p>
+      <ul>
+        <li><code>X260814-01</code> 연동 더존빌</li>
+        <li><code>X260814-02</code> 연동 더존빌</li>
+        <li><code>X260814-03</code> 노형동 라메종하우스</li>
+      </ul>
+    </div>
+    <div class="box">
+      <h3>③ 사진 — 홈페이지는 준비 끝, CRM 한 줄만 남음</h3>
+      <p><code>getHomepageListings()</code> 안에서</p>
+      <p><code>image: ''</code> → <code>image: 사진링크들</code></p>
+      <p style="color:#a8352d"><b>주의:</b> ‘폴더’ 링크는 사진으로 안 보입니다. <b>보정완료 폴더 안 파일 각각의 링크</b>를 쉼표로 이어 붙여야 합니다.</p>
+    </div>
+  </div>
+
+  <h2>④ 차례대로 할 일</h2>
+  <table>
+    <tr><th style="width:12%">순서</th><th style="width:26%">할 일</th><th style="width:14%">어디를</th><th>효과</th></tr>
+    <tr><td class="n">1단계</td><td class="k">위 4+1건</td><td class="w">홈페이지</td><td><span class="ok">완료</span> — 인터넷에 올리기만 하면 됨</td></tr>
+    <tr class="hot"><td class="n">2단계</td><td class="k">매물사진 연동</td><td class="w">CRM 1곳</td><td><b class="t">효과 제일 큼.</b> 사진 없는 매물은 손님이 누르지 않습니다</td></tr>
+    <tr class="hot"><td class="n">3단계</td><td class="k">광고관리에 ‘홈페이지’ 추가</td><td class="w">CRM</td><td>당근·네이버처럼 <b>켠 매물만</b> 홈페이지에 노출 + 정보 바뀌면 알려줌</td></tr>
+    <tr><td class="n">4단계</td><td class="k">매물 상세 주소(URL)</td><td class="w">홈페이지</td><td>매물 20건인데 <b>검색에 잡히는 매물 페이지가 0개</b> · 카톡 공유도 안 됨</td></tr>
+    <tr><td class="n">5단계</td><td class="k">카톡 공유 이미지 · 카카오 상담 · 네이버 플레이스</td><td class="w">설정값</td><td>문의가 실제로 들어오는 통로. 지금은 셋 다 비어 있음</td></tr>
+    <tr><td class="n">6단계</td><td class="k">PC 문의 수단 · 방문자 분석</td><td class="w">홈페이지</td><td>PC에선 전화 버튼이 동작 안 함 / 뭘 보고 나가는지 알 수 있음</td></tr>
+  </table>
+
+  <h2>⑤ 3단계가 왜 근본 해결인가 <em>지금 매물이 다 올라가는 진짜 이유</em></h2>
+  <div class="box">
+    <p>CRM 광고관리는 이미 플랫폼별로 켜고 끕니다 — <b>당근 · 네이버 · 이실장 · 직방 · 다방 · 피터팬 · 블로그.</b>
+       그런데 <b class="t">홈페이지만 이 목록에 없습니다.</b> 그래서 매물관리 시트를 통째로 읽고
+       “거래유형+가격+위치만 있으면 공개”라는 최소 조건만 봅니다.
+       즉 <b>사장님이 “이건 홈페이지에 올리자”고 결정한 적이 한 번도 없습니다.</b></p>
+    <p style="margin-top:3pt">플랫폼 목록에 <code>홈페이지</code> 하나만 추가하면 ▸ 켠 매물만 노출 ▸ 시트에서 가격을 고치면 “홈페이지 내용과 달라졌음” 표시
+       ▸ 게시일 기록 ▸ 사진 없는 매물은 아예 못 켜게 막기 — 이 네 가지가 <b>따라옵니다.</b>
+       지금 잘 나가는 20건을 한 번에 ‘홈페이지 ON’ 하면 손님 눈에는 아무 변화가 없습니다.</p>
+  </div>
+
+  <div class="two" style="margin-top:6pt">
+    <div class="box warn">
+      <h3>⚠ 전자책 원고가 공개될 위험</h3>
+      <p>폴더에 <b>전자책 원고·강의계획서·스크린샷 76장·동영상(11MB)</b>이 보호 없이 있습니다.
+         명령 한 번이면 <b>원고가 통째로 공개 저장소에 올라갑니다.</b> <code>.gitignore</code>에 먼저 등록해 두세요.</p>
+    </div>
+    <div class="box warn">
+      <h3>⚠ 구글 드라이브 + 저장소 주의</h3>
+      <p>홈페이지 폴더가 드라이브로 옮겨졌습니다. <code>.git</code> 폴더가 드라이브 동기화를 타면
+         <b>충돌로 저장소가 깨질 수 있습니다.</b> 동기화 제외로 두거나 드라이브는 보관용으로만 쓰세요.</p>
+    </div>
+  </div>
+
+  <footer>
+    <span>브리즈부동산중개 BREEZE · 제주시 삼무로1길 13, 1층 · 010-2601-0110</span>
+    <span>G:\내 드라이브\07_자동화프롬테크\07_홈페이지만들기</span>
+  </footer>
+
+</div>
+</body>
+</html>
