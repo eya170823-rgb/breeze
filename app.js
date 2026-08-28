@@ -114,35 +114,13 @@
     return out;
   }
 
-  /* ---------- 홈페이지에 내보낼 매물인지 (2026-08-27) ----------
-     매물장에 입력된 게 전부 그대로 올라가는 구조라, 종류·면적이 비어 있는
-     '기타매물'까지 위치도 없이 홈페이지에 떴다. 정보가 덜 채워진 매물은 일단 숨긴다.
-     ※ 임시 조치입니다. 근본 해결은 CRM 광고관리에 '홈페이지' 플랫폼을 추가해
-        사장님이 켠 매물만 나가게 하는 것 — 보완계획 문서 3단계 참고. */
-  const HIDDEN = [];
-  function isPublishable(l) {
-    if (!l) return false;
-    if (!l.type || l.type === "기타매물") return false;                  // 물건유형 미분류
-    if (!String(l.price || "").replace(/[^0-9]/g, "")) return false;     // 가격 없음
-    if (!String(l.area || "").trim()) return false;                      // 면적 없음
-    if (!l.region && !l.location) return false;                          // 위치 없음
-    return true;
-  }
-  function publishable(list) {
-    HIDDEN.length = 0;
-    const ok = (list || []).filter((l) => {
-      if (isPublishable(l)) return true;
-      HIDDEN.push((l && l.key) || (l && l.title) || "?");
-      return false;
-    });
-    if (HIDDEN.length) {
-      console.info(
-        "[BREEZE] 정보가 덜 채워져 홈페이지에서 숨긴 매물 " + HIDDEN.length + "건: " + HIDDEN.join(", ") +
-        "\n→ CRM 매물관리에서 물건유형(kind)·면적(area)·가격을 채우면 바로 올라갑니다."
-      );
-    }
-    return ok;
-  }
+  /* ---------- 어떤 매물을 내보낼지는 CRM이 정합니다 (2026-08-28) ----------
+     2026-08-27에는 정보가 덜 채워진 매물을 여기(홈페이지)에서 걸러냈습니다.
+     그런데 CRM 광고관리에 '🌐 홈페이지' 스위치가 생기면서 판단하는 곳이 두 군데가 됐고,
+     광고관리에는 '노출중'인데 홈페이지엔 안 뜨는 매물이 3건 생겼습니다.
+     → 그 판정을 CRM(getHomepageListings · webEligible)으로 옮기고 여기서는 걷어냈습니다.
+       이제 피드가 보내주는 것이 곧 화면에 뜨는 것입니다. 왜 빠졌는지는 광고관리 🌐 칸이
+       '조건미달'로 알려주고, 그 칸에 마우스를 올리면 이유가 나옵니다. */
 
   // 소식 날짜를 짧게: "Fri, 17 Jul 2026" / "2026-07-17" → "26.07.17"
   const MON3 = { Jan: "01", Feb: "02", Mar: "03", Apr: "04", May: "05", Jun: "06", Jul: "07", Aug: "08", Sep: "09", Oct: "10", Nov: "11", Dec: "12" };
@@ -669,7 +647,7 @@
     if (!grid) return;
     // 1) 캐시 즉시 표시 (재방문 시 빠르게) → 2) 뒤에서 최신으로 갱신
     const showList = (list) => {
-      allListings = publishable(list);       // 정보가 덜 채워진 매물은 제외
+      allListings = list || [];             // 무엇을 내보낼지는 CRM이 정한다
       // 가격 구간의 기준 거래유형을 지금 매물 구성에 맞춘다 (지금은 월세가 대부분)
       const best = DEAL_OPTS.filter((d) => allListings.some((l) => hasDeal(l, d)))
         .sort((a, b) => allListings.filter((l) => hasDeal(l, b)).length - allListings.filter((l) => hasDeal(l, a)).length)[0];
@@ -807,7 +785,7 @@
     if (!grid) return;
     let items = [];
     const draw = (list) => {
-      items = publishable(list).slice(0, 3);
+      items = (list || []).slice(0, 3);
       grid.innerHTML = items.length
         ? items.map((l, i) => listingCard(l, i)).join("")
         : `<p class="empty-msg">등록된 매물이 없습니다.</p>`;
